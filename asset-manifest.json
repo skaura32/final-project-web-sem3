@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/final-project-web-sem3/static/css/main.67932dec.css",
+    "main.js": "/final-project-web-sem3/static/js/main.657d90bf.js",
+    "index.html": "/final-project-web-sem3/index.html",
+    "main.67932dec.css.map": "/final-project-web-sem3/static/css/main.67932dec.css.map",
+    "main.657d90bf.js.map": "/final-project-web-sem3/static/js/main.657d90bf.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.67932dec.css",
+    "static/js/main.657d90bf.js"
+  ]
+}
