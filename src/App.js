@@ -19,7 +19,7 @@ function App(){
       if(raw) return JSON.parse(raw);
     }catch(e){}
     return {
-      users: [], // {email,username,password,program,isAdmin,registeredCourses,phone,birthday}
+      users: [],
       courses: initialCourses,
       programs: programs,
       messages: sampleMessages
