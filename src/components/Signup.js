@@ -7,7 +7,7 @@ export default function Signup({ programs, onRegister, navigate }){
   const [file, setFile] = useState(null);
   const [infoCorrect, setInfoCorrect] = useState(false);
 
-  // clear any previous inputs on mount
+
   useEffect(()=>{ setForm(initial); setFile(null); setInfoCorrect(false); }, []);
 
   const handle = (e) => {
