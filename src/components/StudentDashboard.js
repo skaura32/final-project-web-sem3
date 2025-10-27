@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 export default function StudentDashboard({ state, setState, submitMessage }){
@@ -12,10 +12,10 @@ export default function StudentDashboard({ state, setState, submitMessage }){
     return <div className="card"><p>User not found. If you just signed up, reload the page.</p></div>
   }
 
-  const coursesForTerm = useMemo(()=> state.courses.filter(c=> !term || c.term === term).filter(c=> {
+  const coursesForTerm = state.courses.filter(c=> !term || c.term === term).filter(c=> {
     if(!search) return true;
     return c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase());
-  }), [state.courses, term, search]);
+  });
 
   const registerCourse = (courseId) => {
     // enforce 2-5 courses per term (count registered courses that match selected term)
