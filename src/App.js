@@ -12,14 +12,13 @@ const STORAGE_KEY = 'bow_a1_state_v1';
 function App(){
   const navigate = useNavigate();
   const [state, setState] = useState(()=>{
-    // try load from localStorage
+   
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw) return JSON.parse(raw);
     }catch(e){}
-    // initial state
     return {
-      users: [], // {id, firstName,lastName,email,username,password,program,isAdmin,registeredCourses,phone,birthday}
+      users: [], // {email,username,password,program,isAdmin,registeredCourses,phone,birthday}
       courses: initialCourses,
       programs: programs,
       messages: sampleMessages
