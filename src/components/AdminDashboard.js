@@ -3,15 +3,27 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { generateCourseId } from '../data';
 
 export default function AdminDashboard({ state, addCourse, editCourse, deleteCourse }){
-  const { id } = useParams();
+  // support both /admin/:id and /admin/:adminNumber routes
+  const { id, adminNumber } = useParams();
+  const lookupKey = adminNumber || id;
   const navigate = useNavigate();
-  const user = state.users.find(u => u.id === id);
-  
-  const [form, setForm] = useState({ code:'', name:'', term:'', startDate:'', endDate:'', description:'' });
-  const [editingId, setEditingId] = useState(null);
 
+  // currently authenticated user id in app state (adjust if your state uses a different prop)
+  const currentUserId = state.currentUserId || state.currentUser?.id || null;
+  const currentUser = state.users.find(u => u.id === currentUserId);
+
+  // find target admin by adminNumber (preferred) or by id
+  const user = state.users.find(u => (u.adminNumber && String(u.adminNumber) === String(lookupKey)) || u.id === lookupKey);
+
+  // error / guard checks
   if(!user){
     return <div className="card"><p>Admin not found. If you just signed up, reload the page.</p></div>;
+  }
+  if(!currentUserId){
+    return <div className="card"><p>Access denied — please log in.</p></div>;
+  }
+  if(currentUserId !== user.id){
+    return <div className="card"><p>Access denied — you are not signed in as this admin.</p></div>;
   }
   if(!user.isAdmin){
     return <div className="card"><p>Access denied — you are not an administrator.</p></div>;
@@ -20,6 +32,9 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
   const studentCount = state.users.filter(u => !u.isAdmin).length;
   const courseCount = state.courses.length;
   const messageCount = state.messages ? state.messages.length : 0;
+
+  const [form, setForm] = useState({ code:'', name:'', term:'', startDate:'', endDate:'', description:'' });
+  const [editingId, setEditingId] = useState(null);
 
   const submit = (e) => {
     e.preventDefault();
@@ -42,6 +57,8 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
     setForm({ code:c.code, name:c.name, term:c.term, startDate:c.startDate, endDate:c.endDate, description:c.description });
   };
 
+  const routeId = user.adminNumber || user.id;
+
   return (
     <div>
       <section className="card topbar">
@@ -51,7 +68,7 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
           <p className="small">Role: {user.isAdmin ? 'Administrator' : 'Student'}</p>
         </div>
         <div>
-          <button onClick={() => navigate(`/admin/${id}/profile`)}>View Profile</button>
+          <button onClick={() => navigate(`/admin/${routeId}/profile`)}>View Profile</button>
         </div>
       </section>
 
@@ -60,6 +77,7 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
         <ul>
           <li>First name: {user.firstName}</li>
           <li>Username / ID: {user.id}</li>
+          <li>Admin number: {user.adminNumber || '—'}</li>
           <li>Role: {user.isAdmin ? 'Admin' : 'Student'}</li>
           <li>Total students: {studentCount}</li>
           <li>Total courses: {courseCount}</li>
@@ -67,9 +85,9 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
         </ul>
 
         <div style={{display:'flex', gap:8, marginTop:12}}>
-          <button onClick={() => navigate('/admin/' + id + '/courses')}>Manage Courses</button>
-          <button onClick={() => navigate('/admin/' + id + '/students')}>View Registered Students</button>
-          <button onClick={() => navigate('/admin/' + id + '/messages')}>View Messages</button>
+          <button onClick={() => navigate('/admin/' + routeId + '/courses')}>Manage Courses</button>
+          <button onClick={() => navigate('/admin/' + routeId + '/students')}>View Registered Students</button>
+          <button onClick={() => navigate('/admin/' + routeId + '/messages')}>View Messages</button>
         </div>
       </section>
 
