@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { generateCourseId } from '../data';
 
 export default function AdminDashboard({ state, addCourse, editCourse, deleteCourse }){
   const { id } = useParams();
-  const user = state.users.find(u=> u.id === id);
-  const [form, setForm] = useState({ code:'', name:'', term:'', startDate:'', endDate:'', description:'' });
-  const [editingId, setEditingId] = useState(null);
+  const navigate = useNavigate();
+  const user = state.users.find(u => u.id === id);
 
   if(!user){
-    return <div className="card"><p>Admin user not found.</p></div>;
+    return <div className="card"><p>Admin not found. If you just signed up, reload the page.</p></div>;
   }
+
+  if(!user.isAdmin){
+    return <div className="card"><p>Access denied — you are not an administrator.</p></div>;
+  }
+
+  const studentCount = state.users.filter(u => !u.isAdmin).length;
+  const courseCount = state.courses.length;
+  const messageCount = state.messages ? state.messages.length : 0;
+
+  const [form, setForm] = useState({ code:'', name:'', term:'', startDate:'', endDate:'', description:'' });
+  const [editingId, setEditingId] = useState(null);
 
   const submit = (e) => {
     e.preventDefault();
@@ -37,11 +47,30 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
     <div>
       <section className="card topbar">
         <div>
-          <h2>Admin Panel - {user.firstName} {user.lastName}</h2>
-          <p className="small">ID: {user.id}</p>
+          <h2>Admin Dashboard</h2>
+          <p className="small">Welcome, {user.firstName} {user.lastName}</p>
+          <p className="small">Role: {user.isAdmin ? 'Administrator' : 'Student'}</p>
         </div>
         <div>
-          <button onClick={()=> window.location.href = '/'}>Home</button>
+          <button onClick={() => navigate('/profile')}>View Profile</button>
+        </div>
+      </section>
+
+      <section className="card" style={{marginTop:12}}>
+        <h3>Overview</h3>
+        <ul>
+          <li>First name: {user.firstName}</li>
+          <li>Username / ID: {user.id}</li>
+          <li>Role: {user.isAdmin ? 'Admin' : 'Student'}</li>
+          <li>Total students: {studentCount}</li>
+          <li>Total courses: {courseCount}</li>
+          <li>Submitted messages: {messageCount}</li>
+        </ul>
+
+        <div style={{display:'flex', gap:8, marginTop:12}}>
+          <button onClick={() => navigate('/admin/' + id + '/courses')}>Manage Courses</button>
+          <button onClick={() => navigate('/admin/' + id + '/students')}>View Registered Students</button>
+          <button onClick={() => navigate('/admin/' + id + '/messages')}>View Messages</button>
         </div>
       </section>
 
