@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Profile from './components/Profile';
 import StudentDashboard from './components/StudentDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import AdminProfile from './components/AdminProfile';
 import { programs, courses as initialCourses, sampleMessages } from './data';
 
 const STORAGE_KEY = 'bow_a1_state_v1';
@@ -114,6 +115,7 @@ function App(){
           <Route path="/profile" element={<Profile state={state} setState={setState} navigate={navigate} />} />
           <Route path="/student/:id" element={<StudentDashboard state={state} setState={setState} submitMessage={submitMessage} />} />
           <Route path="/admin/:id" element={<AdminDashboard state={state} addCourse={addCourse} editCourse={editCourse} deleteCourse={deleteCourse} />} />
+          <Route path="/admin/:id/profile" element={<AdminProfile state={state} />} />
         </Routes>
       </main>
 

@@ -6,11 +6,13 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
   const { id } = useParams();
   const navigate = useNavigate();
   const user = state.users.find(u => u.id === id);
+  
+  const [form, setForm] = useState({ code:'', name:'', term:'', startDate:'', endDate:'', description:'' });
+  const [editingId, setEditingId] = useState(null);
 
   if(!user){
     return <div className="card"><p>Admin not found. If you just signed up, reload the page.</p></div>;
   }
-
   if(!user.isAdmin){
     return <div className="card"><p>Access denied — you are not an administrator.</p></div>;
   }
@@ -18,9 +20,6 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
   const studentCount = state.users.filter(u => !u.isAdmin).length;
   const courseCount = state.courses.length;
   const messageCount = state.messages ? state.messages.length : 0;
-
-  const [form, setForm] = useState({ code:'', name:'', term:'', startDate:'', endDate:'', description:'' });
-  const [editingId, setEditingId] = useState(null);
 
   const submit = (e) => {
     e.preventDefault();
@@ -52,7 +51,7 @@ export default function AdminDashboard({ state, addCourse, editCourse, deleteCou
           <p className="small">Role: {user.isAdmin ? 'Administrator' : 'Student'}</p>
         </div>
         <div>
-          <button onClick={() => navigate('/profile')}>View Profile</button>
+          <button onClick={() => navigate(`/admin/${id}/profile`)}>View Profile</button>
         </div>
       </section>
 
