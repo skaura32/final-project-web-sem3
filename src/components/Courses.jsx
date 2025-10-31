@@ -3,14 +3,46 @@ import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
 const SAMPLE_COURSES = [
-  { courseCode: 'SD101', name: 'Intro to Software Development', term: 'Spring' },
-  { courseCode: 'SD102', name: 'Web Programming I', term: 'Spring' },
-  { courseCode: 'SD201', name: 'Databases', term: 'Fall' },
-  { courseCode: 'SD202', name: 'Web Programming II', term: 'Fall' },
-  { courseCode: 'SD301', name: 'Mobile Development', term: 'Summer' },
-  { courseCode: 'SD302', name: 'Cloud Fundamentals', term: 'Winter' },
-  { courseCode: 'SD303', name: 'APIs & Microservices', term: 'Summer' },
-  { courseCode: 'SD401', name: 'Capstone Project', term: 'Fall' }
+  { courseCode: 'SD101', name: 'Intro to Software Development', term: 'Spring',
+    program: 'Software Development - Diploma',
+    fees: { domestic: 9254, international: 27735 },
+    startDate: '2024-03-01', endDate: '2024-06-30',
+    description: 'Fundamentals of programming, problem solving and software lifecycle.' },
+  { courseCode: 'SD102', name: 'Web Programming I', term: 'Spring',
+    program: 'Software Development - Diploma',
+    fees: { domestic: 9254, international: 27735 },
+    startDate: '2024-03-01', endDate: '2024-06-30',
+    description: 'HTML, CSS, basic JavaScript and DOM.' },
+  { courseCode: 'SD201', name: 'Databases', term: 'Fall',
+    program: 'Software Development - Diploma',
+    fees: { domestic: 9254, international: 27735 },
+    startDate: '2024-09-05', endDate: '2024-12-20',
+    description: 'Relational databases, SQL, normalization.' },
+  { courseCode: 'SD202', name: 'Web Programming II', term: 'Fall',
+    program: 'Software Development - Diploma',
+    fees: { domestic: 9254, international: 27735 },
+    startDate: '2024-09-05', endDate: '2024-12-20',
+    description: 'Advanced JS, frameworks and REST APIs.' },
+  { courseCode: 'SD301', name: 'Mobile Development', term: 'Summer',
+    program: 'Software Development - Post-Diploma',
+    fees: { domestic: 7895, international: 23675 },
+    startDate: '2024-06-01', endDate: '2024-08-31',
+    description: 'Mobile app basics for Android/iOS.' },
+  { courseCode: 'SD302', name: 'Cloud Fundamentals', term: 'Winter',
+    program: 'Software Development - Certificate',
+    fees: { domestic: 3000, international: 7000 },
+    startDate: '2025-01-05', endDate: '2025-03-31',
+    description: 'Intro to cloud services and deployment.' },
+  { courseCode: 'SD303', name: 'APIs & Microservices', term: 'Summer',
+    program: 'Software Development - Post-Diploma',
+    fees: { domestic: 7895, international: 23675 },
+    startDate: '2024-06-01', endDate: '2024-08-31',
+    description: 'Designing and building REST APIs and microservices.' },
+  { courseCode: 'SD401', name: 'Capstone Project', term: 'Fall',
+    program: 'Software Development - Diploma',
+    fees: { domestic: 9254, international: 27735 },
+    startDate: '2024-09-05', endDate: '2024-12-20',
+    description: 'Project-based capstone integrating learned skills.' }
 ];
 
 const TERMS = ['Spring', 'Summer', 'Fall', 'Winter'];
@@ -52,6 +84,7 @@ export default function Courses() {
   const [available, setAvailable] = useState(SAMPLE_COURSES);
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
+  const [detailsCourse, setDetailsCourse] = useState(null);
 
   // First useEffect - handle term changes and load registrations
   useEffect(() => {
@@ -142,6 +175,10 @@ export default function Courses() {
     setMessage('Registration saved successfully.');
   }, [term, isLogged, selected, user?.studentId]);
 
+  // open details modal
+  const openDetails = (course) => setDetailsCourse(course);
+  const closeDetails = () => setDetailsCourse(null);
+
   return (
     <div className="signup-container courses-page">
       <h2>Course Registration</h2>
@@ -190,7 +227,13 @@ export default function Courses() {
                     <div className="course-name">{c.name}</div>
                     <div className="course-term">{c.term}</div>
                   </div>
-                  <div>
+                  <div style={{display:'flex', gap:8}}>
+                    <button
+                      className="btn details-btn"
+                      onClick={() => openDetails(c)}
+                    >
+                      Details
+                    </button>
                     <button
                       className="btn add-btn"
                       onClick={() => addCourse(c)}
@@ -242,6 +285,28 @@ export default function Courses() {
           )}
         </div>
       </div>
+
+      {/* Details modal */}
+      {detailsCourse && (
+        <div className="modal-backdrop" onClick={closeDetails} style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', justifyContent:'center', alignItems:'center'
+        }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{background:'#fff', padding:20, borderRadius:8, maxWidth:600, width:'90%'}}>
+            <h3>{detailsCourse.courseCode} - {detailsCourse.name}</h3>
+            <p><strong>Program:</strong> {detailsCourse.program || 'N/A'}</p>
+            <p><strong>Term:</strong> {detailsCourse.term}</p>
+            <p><strong>Dates:</strong> {detailsCourse.startDate ? new Date(detailsCourse.startDate).toLocaleDateString() : 'N/A'} - {detailsCourse.endDate ? new Date(detailsCourse.endDate).toLocaleDateString() : 'N/A'}</p>
+            <p><strong>Fees:</strong> {detailsCourse.fees ? `${detailsCourse.fees.domestic ? '$'+detailsCourse.fees.domestic.toLocaleString()+' (domestic)' : ''}${detailsCourse.fees.international ? (detailsCourse.fees.domestic ? ' / ' : '') + '$' + detailsCourse.fees.international.toLocaleString()+' (international)' : ''}` : 'N/A'}</p>
+            <p>{detailsCourse.description}</p>
+            <div style={{display:'flex', gap:8, marginTop:12}}>
+              <button className="btn add-btn" onClick={() => { addCourse(detailsCourse); closeDetails(); }} disabled={!isLogged || (term && term !== detailsCourse.term)}>
+                Add
+              </button>
+              <button className="btn" onClick={closeDetails}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
