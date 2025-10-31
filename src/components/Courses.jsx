@@ -73,18 +73,22 @@ export default function Courses() {
     setMessage('');
   }, [term, isLogged, user?.studentId]); // Changed dependency to user.studentId
 
-  // Second useEffect - handle search query
+  // Second useEffect - handle search query and term filter
   useEffect(() => {
     const q = query.trim().toLowerCase();
-    const filtered = q
+    const filteredByQuery = q
       ? SAMPLE_COURSES.filter(
           c =>
             c.courseCode.toLowerCase().includes(q) ||
             c.name.toLowerCase().includes(q)
         )
       : SAMPLE_COURSES;
+
+    // If a term is selected, show only courses for that term
+    const filtered = term ? filteredByQuery.filter(c => c.term === term) : filteredByQuery;
+
     setAvailable(filtered);
-  }, [query]); // Only depend on query
+  }, [query, term]); // depend on query and term
 
   // Add these memoized handlers to prevent unnecessary re-renders
   const addCourse = React.useCallback((course) => {
