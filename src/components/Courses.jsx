@@ -45,7 +45,7 @@ function saveRegistrations(studentId, data) {
 
 export default function Courses() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('currentUser'));
+  const [user] = useState(() => JSON.parse(localStorage.getItem('currentUser'))); // Move to useState initializer
   const isLogged = Boolean(user);
   const [term, setTerm] = useState('');
   const [query, setQuery] = useState('');
@@ -53,8 +53,8 @@ export default function Courses() {
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
 
+  // First useEffect - handle term changes and load registrations
   useEffect(() => {
-    // If no term selected, clear selected
     if (!term) {
       setSelected([]);
       setMessage('');
@@ -62,31 +62,32 @@ export default function Courses() {
     }
 
     if (!isLogged) {
-      // non-users see no previously saved registrations
       setSelected([]);
       setMessage('');
       return;
     }
 
+    // Load saved registrations only when term changes
     const regs = loadRegistrations(user.studentId);
     setSelected(regs[term] || []);
     setMessage('');
-  }, [term, isLogged, user]);
+  }, [term, isLogged, user?.studentId]); // Changed dependency to user.studentId
 
+  // Second useEffect - handle search query
   useEffect(() => {
     const q = query.trim().toLowerCase();
-    setAvailable(
-      q
-        ? SAMPLE_COURSES.filter(
-            c =>
-              c.courseCode.toLowerCase().includes(q) ||
-              c.name.toLowerCase().includes(q)
-          )
-        : SAMPLE_COURSES
-    );
-  }, [query]);
+    const filtered = q
+      ? SAMPLE_COURSES.filter(
+          c =>
+            c.courseCode.toLowerCase().includes(q) ||
+            c.name.toLowerCase().includes(q)
+        )
+      : SAMPLE_COURSES;
+    setAvailable(filtered);
+  }, [query]); // Only depend on query
 
-  const addCourse = (course) => {
+  // Add these memoized handlers to prevent unnecessary re-renders
+  const addCourse = React.useCallback((course) => {
     setMessage('');
     if (!term) {
       setMessage('Select a term before adding courses.');
@@ -107,18 +108,18 @@ export default function Courses() {
       return;
     }
     setSelected(prev => [...prev, course]);
-  };
+  }, [term, isLogged, selected]);
 
-  const removeCourse = (courseCode) => {
+  const removeCourse = React.useCallback((courseCode) => {
     if (!isLogged) {
       setMessage('Please login to modify registrations.');
       return;
     }
     setSelected(prev => prev.filter(c => c.courseCode !== courseCode));
     setMessage('');
-  };
+  }, [isLogged]);
 
-  const submitRegistration = () => {
+  const submitRegistration = React.useCallback(() => {
     if (!term) {
       setMessage('Please select a term.');
       return;
@@ -135,7 +136,7 @@ export default function Courses() {
     regs[term] = selected;
     saveRegistrations(user.studentId, regs);
     setMessage('Registration saved successfully.');
-  };
+  }, [term, isLogged, selected, user?.studentId]);
 
   return (
     <div className="signup-container courses-page">
@@ -240,4 +241,3 @@ export default function Courses() {
     </div>
   );
 }
-// ...existing code...
