@@ -43,22 +43,33 @@ export default function AdminDashboard() {
   const [messages, setMessages] = useState([]);
   const [search, setSearch] = useState('');
   const [editingCourse, setEditingCourse] = useState(null);
-  const [courseForm, setCourseForm] = useState({ courseCode: '', name: '', term: '', startDate: '', endDate: '' });
+  const [courseForm, setCourseForm] = useState({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '' });
   const [status, setStatus] = useState('');
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     setUsers(loadUsers());
-    setCourses(loadCourses());
+    // normalize courses so code/key names and fees always exist
+    const rawCourses = loadCourses();
+    const normalized = (rawCourses || []).map(c => {
+      const courseCode = c.courseCode || c.code || '';
+      const fees = c.fees || ( (c.domesticFee || c.internationalFee) ? {
+        domestic: c.domesticFee ? Number(c.domesticFee) : undefined,
+        international: c.internationalFee ? Number(c.internationalFee) : undefined
+      } : undefined );
+      return { ...c, courseCode, fees };
+    });
+    setCourses(normalized);
     setMessages(loadMessages());
   }, []);
 
   // Filtered courses for search
-  const filteredCourses = courses.filter(
-    c =>
-      c.courseCode.toLowerCase().includes(search.toLowerCase()) ||
-      c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCourses = courses.filter(c => {
+    const code = (c.courseCode || c.code || '').toLowerCase();
+    const name = (c.name || '').toLowerCase();
+    const q = (search || '').toLowerCase();
+    return code.includes(q) || name.includes(q);
+  });
 
   // Registered students by program
   const studentsByProgram = users.filter(u => !u.isAdmin).reduce((acc, u) => {
@@ -79,11 +90,17 @@ export default function AdminDashboard() {
       setStatus('Please fill all required fields.');
       return;
     }
+    // normalize fees
+    const fees = {
+      domestic: courseForm.domesticFee ? Number(courseForm.domesticFee) : undefined,
+      international: courseForm.internationalFee ? Number(courseForm.internationalFee) : undefined
+    };
+
     let updatedCourses;
     if (editingCourse) {
-      // Edit
+      // Edit - keep courseCode same key (or allow change if needed)
       updatedCourses = courses.map(c =>
-        c.courseCode === editingCourse.courseCode ? { ...courseForm } : c
+        c.courseCode === editingCourse.courseCode ? { ...courseForm, fees } : c
       );
       setStatus('Course updated.');
     } else {
@@ -92,18 +109,27 @@ export default function AdminDashboard() {
         setStatus('Course code already exists.');
         return;
       }
-      updatedCourses = [...courses, { ...courseForm }];
+      updatedCourses = [...courses, { ...courseForm, fees }];
       setStatus('Course created.');
     }
     setCourses(updatedCourses);
     saveCourses(updatedCourses);
     setEditingCourse(null);
-    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '' });
+    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '' });
   };
 
   const handleEditCourse = (course) => {
     setEditingCourse(course);
-    setCourseForm(course);
+    // populate fees into form fields if present
+    setCourseForm({
+      courseCode: course.courseCode || '',
+      name: course.name || '',
+      term: course.term || '',
+      startDate: course.startDate || '',
+      endDate: course.endDate || '',
+      domesticFee: course.fees && course.fees.domestic ? String(course.fees.domestic) : '',
+      internationalFee: course.fees && course.fees.international ? String(course.fees.international) : ''
+    });
     setStatus('');
   };
 
@@ -114,7 +140,7 @@ export default function AdminDashboard() {
     saveCourses(updatedCourses);
     setStatus('Course deleted.');
     setEditingCourse(null);
-    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '' });
+    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '' });
   };
 
   if (!admin || !admin.isAdmin) {
@@ -151,23 +177,45 @@ export default function AdminDashboard() {
         <h3>Manage Courses</h3>
         <form onSubmit={handleCreateOrEditCourse} style={{ marginBottom: 12 }}>
           <div className="form-group">
-            <input name="courseCode" placeholder="Course Code" value={courseForm.courseCode} onChange={handleCourseFormChange} required />
+            <label htmlFor="courseCode">Course Code</label>
+            <input id="courseCode" name="courseCode" placeholder="Course Code" value={courseForm.courseCode} onChange={handleCourseFormChange} required />
           </div>
           <div className="form-group">
-            <input name="name" placeholder="Course Name" value={courseForm.name} onChange={handleCourseFormChange} required />
+            <label htmlFor="name">Course Name</label>
+            <input id="name" name="name" placeholder="Course Name" value={courseForm.name} onChange={handleCourseFormChange} required />
           </div>
           <div className="form-group">
-            <input name="term" placeholder="Term (e.g. Fall)" value={courseForm.term} onChange={handleCourseFormChange} required />
+            <label htmlFor="term">Term</label>
+            <select id="term" name="term" value={courseForm.term} onChange={handleCourseFormChange} required>
+              <option value="">Select Term</option>
+              <option value="Spring">Spring</option>
+              <option value="Summer">Summer</option>
+              <option value="Fall">Fall</option>
+              <option value="Winter">Winter</option>
+            </select>
           </div>
           <div className="form-group">
-            <input name="startDate" type="date" placeholder="Start Date" value={courseForm.startDate} onChange={handleCourseFormChange} />
+            <label htmlFor="startDate">Start Date</label>
+            <input id="startDate" name="startDate" type="date" value={courseForm.startDate} onChange={handleCourseFormChange} />
           </div>
           <div className="form-group">
-            <input name="endDate" type="date" placeholder="End Date" value={courseForm.endDate} onChange={handleCourseFormChange} />
+            <label htmlFor="endDate">End Date</label>
+            <input id="endDate" name="endDate" type="date" value={courseForm.endDate} onChange={handleCourseFormChange} />
           </div>
+
+          {/* Fee inputs - visible and labeled */}
+          <div className="form-group">
+            <label htmlFor="domesticFee">Domestic Fee (CAD)</label>
+            <input id="domesticFee" name="domesticFee" type="number" min="0" placeholder="e.g. 9254" value={courseForm.domesticFee} onChange={handleCourseFormChange} />
+          </div>
+          <div className="form-group">
+            <label htmlFor="internationalFee">International Fee (CAD)</label>
+            <input id="internationalFee" name="internationalFee" type="number" min="0" placeholder="e.g. 27735" value={courseForm.internationalFee} onChange={handleCourseFormChange} />
+          </div>
+
           <button type="submit">{editingCourse ? 'Update Course' : 'Create Course'}</button>
           {editingCourse && (
-            <button type="button" style={{ marginLeft: 8 }} onClick={() => { setEditingCourse(null); setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '' }); }}>Cancel</button>
+            <button type="button" style={{ marginLeft: 8 }} onClick={() => { setEditingCourse(null); setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '' }); }}>Cancel</button>
           )}
         </form>
         {status && <div className="message success">{status}</div>}
@@ -176,11 +224,17 @@ export default function AdminDashboard() {
         </div>
         <ul className="course-list">
           {filteredCourses.map(c => (
-            <li key={c.courseCode} className="course-item">
+            <li key={c.courseCode || c.code} className="course-item">
               <div>
-                <strong>{c.courseCode}</strong> — {c.name} <em>({c.term})</em>
+                <strong>{c.courseCode || c.code}</strong> — {c.name} <em>({c.term})</em>
                 {c.startDate && <> | Start: {c.startDate}</>}
                 {c.endDate && <> | End: {c.endDate}</>}
+                {c.fees && (
+                  <div style={{ marginTop: 6, color: '#374151' }}>
+                    Fees: {c.fees.domestic ? '$' + c.fees.domestic.toLocaleString() + ' (domestic)' : '—'}
+                    {c.fees.international ? ' / $' + c.fees.international.toLocaleString() + ' (international)' : ''}
+                  </div>
+                )}
               </div>
               <div>
                 <button className="btn" onClick={() => handleEditCourse(c)}>Edit</button>
