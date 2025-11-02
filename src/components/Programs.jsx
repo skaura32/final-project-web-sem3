@@ -19,7 +19,6 @@ export default function Programs() {
             <p className='program-snippet'>{p.description.slice(0, 120)}{p.description.length>120?'...':''}</p>
             <div style={{display:'flex', gap:8, marginTop:8}}>
               <button className='btn' onClick={() => setSelected(p)}>View Details</button>
-              <button className='btn add-btn' onClick={() => window.location.href = '/signup'}>Sign Up</button>
             </div>
           </div>
         ))}
@@ -35,7 +34,6 @@ export default function Programs() {
           <p>{selected.description}</p>
           <div style={{display:'flex', gap:8}}>
             <button className='btn' onClick={() => setSelected(null)}>Close</button>
-            <button className='btn primary' onClick={() => window.location.href = '/signup'}>Register for Program</button>
           </div>
         </div>
       )}
