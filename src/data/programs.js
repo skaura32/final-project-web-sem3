@@ -1,5 +1,4 @@
-﻿ // filepath: src\data\programs.js
-const PROGRAMS = [
+﻿const PROGRAMS = [
   {
     id: 'SD-DIP',
     title: 'Software Development - Diploma (2 years)',

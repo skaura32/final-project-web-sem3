@@ -1,7 +1,7 @@
 ﻿// filepath: src/App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import NavBar from './components/NavBar'; // or './components/navbar' if your file is lowercase
+import NavBar from './components/NavBar'; 
 import SignUp from './components/SignUp';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';

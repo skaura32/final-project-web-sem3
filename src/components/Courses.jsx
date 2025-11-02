@@ -67,7 +67,6 @@ function loadRegistrations(studentId) {
 }
 
 function saveRegistrations(studentId, data) {
-  // Data is term -> array of course objects. Save as term -> array of courseCode strings.
   const toSave = {};
   Object.keys(data).forEach(term => {
     toSave[term] = (data[term] || []).map(item => (typeof item === 'string' ? item : item.courseCode));
@@ -86,7 +85,6 @@ export default function Courses() {
   const [message, setMessage] = useState('');
   const [detailsCourse, setDetailsCourse] = useState(null);
 
-  // First useEffect - handle term changes and load registrations
   useEffect(() => {
     if (!term) {
       setSelected([]);
@@ -100,13 +98,11 @@ export default function Courses() {
       return;
     }
 
-    // Load saved registrations only when term changes
     const regs = loadRegistrations(user.studentId);
     setSelected(regs[term] || []);
     setMessage('');
-  }, [term, isLogged, user?.studentId]); // Changed dependency to user.studentId
+  }, [term, isLogged, user?.studentId]); 
 
-  // Second useEffect - handle search query and term filter
   useEffect(() => {
     const q = query.trim().toLowerCase();
     const filteredByQuery = q
@@ -117,13 +113,11 @@ export default function Courses() {
         )
       : SAMPLE_COURSES;
 
-    // If a term is selected, show only courses for that term
     const filtered = term ? filteredByQuery.filter(c => c.term === term) : filteredByQuery;
 
     setAvailable(filtered);
-  }, [query, term]); // depend on query and term
+  }, [query, term]); 
 
-  // Add these memoized handlers to prevent unnecessary re-renders
   const addCourse = React.useCallback((course) => {
     setMessage('');
     if (!term) {
@@ -134,12 +128,12 @@ export default function Courses() {
       setMessage('Please login to register for courses.');
       return;
     }
-    // Prevent duplicates for same term
+   
     if (selected.some(c => c.courseCode === course.courseCode)) {
       setMessage('Course already selected for this term.');
       return;
     }
-    // Enforce max 5
+   
     if (selected.length >= 5) {
       setMessage('Maximum 5 courses allowed per term.');
       return;
@@ -175,7 +169,6 @@ export default function Courses() {
     setMessage('Registration saved successfully.');
   }, [term, isLogged, selected, user?.studentId]);
 
-  // open details modal
   const openDetails = (course) => setDetailsCourse(course);
   const closeDetails = () => setDetailsCourse(null);
 
@@ -286,7 +279,7 @@ export default function Courses() {
         </div>
       </div>
 
-      {/* Details modal */}
+      {}
       {detailsCourse && (
         <div className="modal-backdrop" onClick={closeDetails} style={{
           position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', justifyContent:'center', alignItems:'center'

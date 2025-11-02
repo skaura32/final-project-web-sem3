@@ -6,7 +6,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* ...existing routes... */}
+        {}
         <Route path="/signup" element={<SignUp />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>

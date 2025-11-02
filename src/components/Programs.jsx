@@ -1,5 +1,4 @@
-﻿ // filepath: src/components/Programs.jsx
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import '../App.css';
 import PROGRAMS from '../data/programs';
 

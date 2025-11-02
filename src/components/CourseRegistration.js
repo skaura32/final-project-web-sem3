@@ -8,7 +8,6 @@ export default function CourseRegistration({ state, updateUser }) {
   const [availableCourses, setAvailableCourses] = useState([]);
   const navigate = useNavigate();
 
-  // Update available courses when dependencies change
   useEffect(() => {
     if (!state.courses) return;
 

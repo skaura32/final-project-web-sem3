@@ -29,13 +29,11 @@ export default function AdminCourses() {
   });
   const [status, setStatus] = useState('');
 
-  // Load & normalize courses once
   useEffect(() => {
     const raw = loadCourses();
     const normalized = (raw || []).map(c => {
       const courseCode = c.courseCode || c.code || '';
       const feesFromTop = c.fees || {};
-      // support legacy domesticFee/internationalFee keys
       const fees = {
         domestic: feesFromTop.domestic ?? (c.domesticFee ? Number(c.domesticFee) : undefined),
         international: feesFromTop.international ?? (c.internationalFee ? Number(c.internationalFee) : undefined)
