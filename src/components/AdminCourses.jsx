@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Sample courses that students see (same as in Courses.jsx)
+// Sample courses that students see
 const SAMPLE_COURSES = [
   { courseCode: 'SD101', name: 'Intro to Software Development', term: 'Spring',
     program: 'Software Development - Diploma',
@@ -22,40 +22,17 @@ const SAMPLE_COURSES = [
     fees: { domestic: 9254, international: 27735 },
     startDate: '2024-09-05', endDate: '2024-12-20',
     description: 'Advanced JS, frameworks and REST APIs.' },
-  { courseCode: 'SD301', name: 'Mobile Development', term: 'Summer',
-    program: 'Software Development - Post-Diploma',
-    fees: { domestic: 7895, international: 23675 },
-    startDate: '2024-06-01', endDate: '2024-08-31',
-    description: 'Mobile app basics for Android/iOS.' },
-  { courseCode: 'SD302', name: 'Cloud Fundamentals', term: 'Winter',
-    program: 'Software Development - Certificate',
-    fees: { domestic: 3000, international: 7000 },
-    startDate: '2025-01-05', endDate: '2025-03-31',
-    description: 'Intro to cloud services and deployment.' },
-  { courseCode: 'SD303', name: 'APIs & Microservices', term: 'Summer',
-    program: 'Software Development - Post-Diploma',
-    fees: { domestic: 7895, international: 23675 },
-    startDate: '2024-06-01', endDate: '2024-08-31',
-    description: 'Designing and building REST APIs and microservices.' },
-  { courseCode: 'SD401', name: 'Capstone Project', term: 'Fall',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-09-05', endDate: '2024-12-20',
-    description: 'Project-based capstone integrating learned skills.' }
 ];
 
-function loadCourses() {
+function loadAllCourses() {
   try {
-    const raw = localStorage.getItem('courses');
-    const adminCourses = raw ? JSON.parse(raw) : [];
-    
-    // Merge sample courses with admin-created courses
+    const adminCourses = JSON.parse(localStorage.getItem('adminCourses') || '[]');
     const allCourses = [...SAMPLE_COURSES];
     
-    // Add admin-created courses that don't already exist
+    // Add admin-created courses
     adminCourses.forEach(adminCourse => {
       if (!allCourses.find(c => c.courseCode === adminCourse.courseCode)) {
-        allCourses.push(adminCourse);
+        allCourses.push({...adminCourse, isCustom: true});
       }
     });
     
@@ -65,12 +42,10 @@ function loadCourses() {
   }
 }
 
-function saveCourses(courses) {
-  // Only save non-sample courses to localStorage
-  const adminCourses = courses.filter(course => 
-    !SAMPLE_COURSES.find(sample => sample.courseCode === course.courseCode)
-  );
-  localStorage.setItem('courses', JSON.stringify(adminCourses));
+function saveAdminCourses(courses) {
+  // Only save custom courses (not sample courses)
+  const customCourses = courses.filter(course => course.isCustom);
+  localStorage.setItem('adminCourses', JSON.stringify(customCourses));
 }
 
 export default function AdminCourses() {
@@ -91,27 +66,7 @@ export default function AdminCourses() {
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    const allCourses = loadCourses();
-    const normalized = allCourses.map(c => {
-      const courseCode = c.courseCode || c.code || '';
-      const feesFromTop = c.fees || {};
-      const fees = {
-        domestic: feesFromTop.domestic ?? (c.domesticFee ? Number(c.domesticFee) : undefined),
-        international: feesFromTop.international ?? (c.internationalFee ? Number(c.internationalFee) : undefined)
-      };
-      return {
-        ...c,
-        courseCode,
-        name: c.name || c.courseName || '',
-        term: c.term || c.semester || '',
-        startDate: c.startDate || '',
-        endDate: c.endDate || '',
-        description: c.description || '',
-        fees: (fees.domestic || fees.international) ? fees : undefined,
-        isSystemCourse: SAMPLE_COURSES.find(sample => sample.courseCode === courseCode) ? true : false
-      };
-    });
-    setCourses(normalized);
+    setCourses(loadAllCourses());
   }, []);
 
   const filteredCourses = courses.filter(c => {
@@ -138,54 +93,54 @@ export default function AdminCourses() {
       international: courseForm.internationalFee ? Number(courseForm.internationalFee) : undefined
     };
 
-    let updatedCourses;
-    if (editingCourse) {
-      if (editingCourse.isSystemCourse) {
-        setStatus('Cannot edit system courses. Create a new course instead.');
-        return;
+    const courseData = {
+      courseCode: courseForm.courseCode,
+      name: courseForm.name,
+      term: courseForm.term,
+      startDate: courseForm.startDate,
+      endDate: courseForm.endDate,
+      description: courseForm.description,
+      fees: (fees.domestic || fees.international) ? fees : undefined,
+      program: 'Software Development - Custom',
+      isCustom: true
+    };
+
+    try {
+      let updatedCourses;
+      
+      if (editingCourse) {
+        if (!editingCourse.isCustom) {
+          setStatus('Cannot edit system courses. Create a new course instead.');
+          return;
+        }
+        // Update course
+        updatedCourses = courses.map(c => 
+          c.courseCode === editingCourse.courseCode ? courseData : c
+        );
+        setStatus('Course updated successfully.');
+      } else {
+        if (courses.find(c => c.courseCode === courseForm.courseCode)) {
+          setStatus('Course code already exists.');
+          return;
+        }
+        // Add new course
+        updatedCourses = [...courses, courseData];
+        setStatus('Course created successfully.');
       }
       
-      updatedCourses = courses.map(c =>
-        (c.courseCode === editingCourse.courseCode)
-          ? {
-              ...c,
-              courseCode: courseForm.courseCode,
-              name: courseForm.name,
-              term: courseForm.term,
-              startDate: courseForm.startDate,
-              endDate: courseForm.endDate,
-              description: courseForm.description,
-              fees: (fees.domestic || fees.international) ? fees : undefined
-            }
-          : c
-      );
-      setStatus('Course updated.');
-    } else {
-      if (courses.find(c => c.courseCode === courseForm.courseCode)) {
-        setStatus('Course code already exists.');
-        return;
-      }
-      const newCourse = {
-        courseCode: courseForm.courseCode,
-        name: courseForm.name,
-        term: courseForm.term,
-        startDate: courseForm.startDate,
-        endDate: courseForm.endDate,
-        description: courseForm.description,
-        fees: (fees.domestic || fees.international) ? fees : undefined,
-        isSystemCourse: false
-      };
-      updatedCourses = [...courses, newCourse];
-      setStatus('Course created.');
+      setCourses(updatedCourses);
+      saveAdminCourses(updatedCourses);
+      setEditingCourse(null);
+      setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
+    } catch (error) {
+      setStatus(error.message);
     }
-    setCourses(updatedCourses);
-    saveCourses(updatedCourses);
-    setEditingCourse(null);
-    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
   };
 
   const handleEditCourse = (course) => {
-    if (course.isSystemCourse) {
+    console.log('Editing course:', course); // Debug log
+    
+    if (!course.isCustom) {
       setStatus('System courses cannot be edited. You can create a new course instead.');
       return;
     }
@@ -201,23 +156,33 @@ export default function AdminCourses() {
       internationalFee: course.fees && course.fees.international ? String(course.fees.international) : '',
       description: course.description || ''
     });
-    setStatus('');
+    setStatus('Editing course: ' + course.name);
   };
 
   const handleDeleteCourse = (courseCode) => {
+    console.log('Deleting course:', courseCode); // Debug log
+    
     const course = courses.find(c => c.courseCode === courseCode);
-    if (course && course.isSystemCourse) {
+    if (course && !course.isCustom) {
       setStatus('System courses cannot be deleted.');
       return;
     }
     
     if (!window.confirm('Delete this course?')) return;
-    const updatedCourses = courses.filter(c => c.courseCode !== courseCode);
-    setCourses(updatedCourses);
-    saveCourses(updatedCourses);
-    setStatus('Course deleted.');
-    setEditingCourse(null);
-    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
+    
+    try {
+      const updatedCourses = courses.filter(c => c.courseCode !== courseCode);
+      setCourses(updatedCourses);
+      saveAdminCourses(updatedCourses);
+      setStatus('Course deleted successfully.');
+      
+      if (editingCourse && editingCourse.courseCode === courseCode) {
+        setEditingCourse(null);
+        setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
+      }
+    } catch (error) {
+      setStatus(error.message);
+    }
   };
 
   if (!admin || !admin.isAdmin) {
@@ -258,8 +223,6 @@ export default function AdminCourses() {
           </div>
         </div>
 
-        <div style={{ height: 8 }} />
-
         <div className="form-row" style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
             <label>Domestic Fee (CAD)</label>
@@ -279,12 +242,17 @@ export default function AdminCourses() {
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <button type="submit">{editingCourse ? 'Update Course' : 'Create Course'}</button>
           {editingCourse && (
-            <button type="button" style={{ marginLeft: 8 }} onClick={() => { setEditingCourse(null); setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' }); }}>Cancel</button>
+            <button type="button" onClick={() => { 
+              setEditingCourse(null); 
+              setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' }); 
+            }}>
+              Cancel
+            </button>
           )}
         </div>
       </form>
 
-      {status && <div className="message success">{status}</div>}
+      {status && <div className="message success" style={{color: status.includes('error') || status.includes('Cannot') || status.includes('already exists') ? 'red' : 'green'}}>{status}</div>}
 
       <div className="search-row">
         <input className="search-input" placeholder="Search courses by code or name" value={search} onChange={e => setSearch(e.target.value)} />
@@ -302,7 +270,7 @@ export default function AdminCourses() {
           <li key={c.courseCode} className="course-item">
             <div>
               <strong>{c.courseCode}</strong> — {c.name} <em>({c.term})</em>
-              {c.isSystemCourse && <span style={{ color: '#666', fontSize: '12px' }}> [System Course]</span>}
+              {!c.isCustom && <span style={{ color: '#666', fontSize: '12px' }}> [System Course]</span>}
               {c.description && <p style={{ fontSize: '14px', margin: '4px 0', color: '#666' }}>{c.description}</p>}
               {c.fees && (
                 <p style={{ fontSize: '12px', color: '#888' }}>
@@ -316,16 +284,16 @@ export default function AdminCourses() {
               <button 
                 className="btn" 
                 onClick={() => handleEditCourse(c)}
-                disabled={c.isSystemCourse}
-                title={c.isSystemCourse ? 'System courses cannot be edited' : 'Edit course'}
+                disabled={!c.isCustom}
+                title={!c.isCustom ? 'System courses cannot be edited' : 'Edit course'}
               >
                 Edit
               </button>
               <button 
                 className="btn remove-btn" 
                 onClick={() => handleDeleteCourse(c.courseCode)}
-                disabled={c.isSystemCourse}
-                title={c.isSystemCourse ? 'System courses cannot be deleted' : 'Delete course'}
+                disabled={!c.isCustom}
+                title={!c.isCustom ? 'System courses cannot be deleted' : 'Delete course'}
               >
                 Delete
               </button>

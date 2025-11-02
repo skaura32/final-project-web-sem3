@@ -1,49 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { loadAllCourses } from '../data/coursesData';
 import '../App.css';
-
-const SAMPLE_COURSES = [
-  { courseCode: 'SD101', name: 'Intro to Software Development', term: 'Spring',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-03-01', endDate: '2024-06-30',
-    description: 'Fundamentals of programming, problem solving and software lifecycle.' },
-  { courseCode: 'SD102', name: 'Web Programming I', term: 'Spring',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-03-01', endDate: '2024-06-30',
-    description: 'HTML, CSS, basic JavaScript and DOM.' },
-  { courseCode: 'SD201', name: 'Databases', term: 'Fall',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-09-05', endDate: '2024-12-20',
-    description: 'Relational databases, SQL, normalization.' },
-  { courseCode: 'SD202', name: 'Web Programming II', term: 'Fall',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-09-05', endDate: '2024-12-20',
-    description: 'Advanced JS, frameworks and REST APIs.' },
-  { courseCode: 'SD301', name: 'Mobile Development', term: 'Summer',
-    program: 'Software Development - Post-Diploma',
-    fees: { domestic: 7895, international: 23675 },
-    startDate: '2024-06-01', endDate: '2024-08-31',
-    description: 'Mobile app basics for Android/iOS.' },
-  { courseCode: 'SD302', name: 'Cloud Fundamentals', term: 'Winter',
-    program: 'Software Development - Certificate',
-    fees: { domestic: 3000, international: 7000 },
-    startDate: '2025-01-05', endDate: '2025-03-31',
-    description: 'Intro to cloud services and deployment.' },
-  { courseCode: 'SD303', name: 'APIs & Microservices', term: 'Summer',
-    program: 'Software Development - Post-Diploma',
-    fees: { domestic: 7895, international: 23675 },
-    startDate: '2024-06-01', endDate: '2024-08-31',
-    description: 'Designing and building REST APIs and microservices.' },
-  { courseCode: 'SD401', name: 'Capstone Project', term: 'Fall',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-09-05', endDate: '2024-12-20',
-    description: 'Project-based capstone integrating learned skills.' }
-];
 
 const TERMS = ['Spring', 'Summer', 'Fall', 'Winter'];
 
@@ -52,38 +9,33 @@ const regsKey = (studentId) => `registrations_${studentId}`;
 function loadRegistrations(studentId) {
   try {
     const raw = localStorage.getItem(regsKey(studentId));
-    
     const parsed = raw ? JSON.parse(raw) : {};
-    const mapped = {};
-    Object.keys(parsed).forEach(term => {
-      mapped[term] = (parsed[term] || []).map(code =>
-        SAMPLE_COURSES.find(c => c.courseCode === code) || { courseCode: code, name: code }
-      );
-    });
-    return mapped;
+    return parsed;
   } catch {
     return {};
   }
 }
 
 function saveRegistrations(studentId, data) {
-  const toSave = {};
-  Object.keys(data).forEach(term => {
-    toSave[term] = (data[term] || []).map(item => (typeof item === 'string' ? item : item.courseCode));
-  });
-  localStorage.setItem(regsKey(studentId), JSON.stringify(toSave));
+  localStorage.setItem(regsKey(studentId), JSON.stringify(data));
 }
 
 export default function Courses() {
-  const navigate = useNavigate();
-  const [user] = useState(() => JSON.parse(localStorage.getItem('currentUser'))); // Move to useState initializer
+  const [user] = useState(() => JSON.parse(localStorage.getItem('currentUser')));
   const isLogged = Boolean(user);
   const [term, setTerm] = useState('');
   const [query, setQuery] = useState('');
-  const [available, setAvailable] = useState(SAMPLE_COURSES);
+  const [allCourses, setAllCourses] = useState([]);
+  const [available, setAvailable] = useState([]);
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
   const [detailsCourse, setDetailsCourse] = useState(null);
+
+  // Load courses from shared data source
+  useEffect(() => {
+    const courses = loadAllCourses();
+    setAllCourses(courses);
+  }, []);
 
   useEffect(() => {
     if (!term) {
@@ -99,24 +51,30 @@ export default function Courses() {
     }
 
     const regs = loadRegistrations(user.studentId);
-    setSelected(regs[term] || []);
+    const termCourses = regs[term] || [];
+    
+    // Convert course codes to course objects
+    const selectedCourses = termCourses.map(courseCode => {
+      return allCourses.find(c => c.courseCode === courseCode) || { courseCode, name: courseCode };
+    });
+    
+    setSelected(selectedCourses);
     setMessage('');
-  }, [term, isLogged, user?.studentId]); 
+  }, [term, isLogged, user?.studentId, allCourses]);
 
   useEffect(() => {
     const q = query.trim().toLowerCase();
     const filteredByQuery = q
-      ? SAMPLE_COURSES.filter(
+      ? allCourses.filter(
           c =>
             c.courseCode.toLowerCase().includes(q) ||
             c.name.toLowerCase().includes(q)
         )
-      : SAMPLE_COURSES;
+      : allCourses;
 
     const filtered = term ? filteredByQuery.filter(c => c.term === term) : filteredByQuery;
-
     setAvailable(filtered);
-  }, [query, term]); 
+  }, [query, term, allCourses]);
 
   const addCourse = React.useCallback((course) => {
     setMessage('');
@@ -163,8 +121,9 @@ export default function Courses() {
       setMessage('You must register for at least 2 courses.');
       return;
     }
+    
     const regs = loadRegistrations(user.studentId);
-    regs[term] = selected;
+    regs[term] = selected.map(c => c.courseCode);
     saveRegistrations(user.studentId, regs);
     setMessage('Registration saved successfully.');
   }, [term, isLogged, selected, user?.studentId]);
@@ -219,6 +178,7 @@ export default function Courses() {
                     <div className="course-code">{c.courseCode}</div>
                     <div className="course-name">{c.name}</div>
                     <div className="course-term">{c.term}</div>
+                    {c.isCustom && <span style={{fontSize: '11px', color: '#666'}}>[Admin Created]</span>}
                   </div>
                   <div style={{display:'flex', gap:8}}>
                     <button
@@ -279,7 +239,6 @@ export default function Courses() {
         </div>
       </div>
 
-      {}
       {detailsCourse && (
         <div className="modal-backdrop" onClick={closeDetails} style={{
           position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', justifyContent:'center', alignItems:'center'
