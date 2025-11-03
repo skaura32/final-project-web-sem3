@@ -1,52 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-// Sample courses that students see
-const SAMPLE_COURSES = [
-  { courseCode: 'SD101', name: 'Intro to Software Development', term: 'Spring',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-03-01', endDate: '2024-06-30',
-    description: 'Fundamentals of programming, problem solving and software lifecycle.' },
-  { courseCode: 'SD102', name: 'Web Programming I', term: 'Spring',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-03-01', endDate: '2024-06-30',
-    description: 'HTML, CSS, basic JavaScript and DOM.' },
-  { courseCode: 'SD201', name: 'Databases', term: 'Fall',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-09-05', endDate: '2024-12-20',
-    description: 'Relational databases, SQL, normalization.' },
-  { courseCode: 'SD202', name: 'Web Programming II', term: 'Fall',
-    program: 'Software Development - Diploma',
-    fees: { domestic: 9254, international: 27735 },
-    startDate: '2024-09-05', endDate: '2024-12-20',
-    description: 'Advanced JS, frameworks and REST APIs.' },
-];
-
-function loadAllCourses() {
-  try {
-    const adminCourses = JSON.parse(localStorage.getItem('adminCourses') || '[]');
-    const allCourses = [...SAMPLE_COURSES];
-    
-    // Add admin-created courses
-    adminCourses.forEach(adminCourse => {
-      if (!allCourses.find(c => c.courseCode === adminCourse.courseCode)) {
-        allCourses.push({...adminCourse, isCustom: true});
-      }
-    });
-    
-    return allCourses;
-  } catch {
-    return SAMPLE_COURSES;
-  }
-}
-
-function saveAdminCourses(courses) {
-  // Only save custom courses (not sample courses)
-  const customCourses = courses.filter(course => course.isCustom);
-  localStorage.setItem('adminCourses', JSON.stringify(customCourses));
-}
+import { loadAllCourses, saveAdminCourses } from '../data/coursesData';
 
 export default function AdminCourses() {
   const admin = JSON.parse(localStorage.getItem('currentUser'));
