@@ -215,7 +215,6 @@ export default function AdminCourses() {
           <li key={c.courseCode} className="course-item">
             <div>
               <strong>{c.courseCode}</strong> — {c.name} <em>({c.term})</em>
-              {!c.isCustom && <span style={{ color: '#666', fontSize: '12px' }}> [System Course]</span>}
               {c.description && <p style={{ fontSize: '14px', margin: '4px 0', color: '#666' }}>{c.description}</p>}
               {c.fees && (
                 <p style={{ fontSize: '12px', color: '#888' }}>
