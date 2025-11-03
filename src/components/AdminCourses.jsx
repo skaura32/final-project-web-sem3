@@ -22,6 +22,11 @@ export default function AdminCourses() {
     setCourses(loadAllCourses());
   }, []);
 
+  // debug: monitor editingCourse changes
+  useEffect(() => {
+    console.log('editingCourse changed =>', editingCourse);
+  }, [editingCourse]);
+
   const filteredCourses = courses.filter(c => {
     const q = (search || '').toLowerCase();
     const code = (c.courseCode || '').toLowerCase();
@@ -55,17 +60,15 @@ export default function AdminCourses() {
       description: courseForm.description,
       fees: (fees.domestic || fees.international) ? fees : undefined,
       program: 'Software Development - Custom',
-      isCustom: true
+      // Preserve isCustom when editing; new courses are custom
+      isCustom: editingCourse ? editingCourse.isCustom : true
     };
 
     try {
       let updatedCourses;
       
       if (editingCourse) {
-        if (!editingCourse.isCustom) {
-          setStatus('Cannot edit system courses. Create a new course instead.');
-          return;
-        }
+        // allow editing any course (system or custom)
         updatedCourses = courses.map(c => 
           c.courseCode === editingCourse.courseCode ? courseData : c
         );
@@ -89,13 +92,9 @@ export default function AdminCourses() {
   };
 
   const handleEditCourse = (course) => {
-    console.log('Editing course:', course); 
-    
-    if (!course.isCustom) {
-      setStatus('System courses cannot be edited. You can create a new course instead.');
-      return;
-    }
-    
+    console.log('Editing course:', course);
+
+    // allow editing system courses too
     setEditingCourse(course);
     setCourseForm({
       courseCode: course.courseCode || '',
@@ -108,17 +107,19 @@ export default function AdminCourses() {
       description: course.description || ''
     });
     setStatus('Editing course: ' + course.name);
+
+    // scroll and focus form input to make changes obvious
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      const el = document.querySelector('input[name="courseCode"]');
+      if (el) el.focus();
+    }, 300);
   };
 
   const handleDeleteCourse = (courseCode) => {
     console.log('Deleting course:', courseCode); 
     
-    const course = courses.find(c => c.courseCode === courseCode);
-    if (course && !course.isCustom) {
-      setStatus('System courses cannot be deleted.');
-      return;
-    }
-    
+    // allow deleting any course (system or custom)
     if (!window.confirm('Delete this course?')) return;
     
     try {
@@ -233,18 +234,18 @@ export default function AdminCourses() {
             </div>
             <div>
               <button 
+                type="button"
                 className="btn" 
                 onClick={() => handleEditCourse(c)}
-                disabled={!c.isCustom}
-                title={!c.isCustom ? 'System courses cannot be edited' : 'Edit course'}
+                title="Edit course"
               >
                 Edit
               </button>
               <button 
+                type="button"
                 className="btn remove-btn" 
                 onClick={() => handleDeleteCourse(c.courseCode)}
-                disabled={!c.isCustom}
-                title={!c.isCustom ? 'System courses cannot be deleted' : 'Delete course'}
+                title="Delete course"
               >
                 Delete
               </button>
