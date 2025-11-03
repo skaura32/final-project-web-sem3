@@ -206,7 +206,7 @@ export default function AdminCourses() {
       <div style={{ marginTop: 24, marginBottom: 12 }}>
         <h3>All Courses ({filteredCourses.length})</h3>
         <p style={{ color: '#6b7280', fontSize: '14px' }}>
-          System courses are read-only. You can create new courses or edit/delete your custom courses.
+          {filteredCourses.length === 0 ? 'No courses found.' : 'Showing all courses.'}
         </p>
       </div>
 
