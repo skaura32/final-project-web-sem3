@@ -49,7 +49,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setUsers(loadUsers());
-    // normalize courses so code/key names and fees always exist
     const rawCourses = loadCourses();
     const normalized = (rawCourses || []).map(c => {
       const courseCode = c.courseCode || c.code || '';
@@ -63,7 +62,6 @@ export default function AdminDashboard() {
     setMessages(loadMessages());
   }, []);
 
-  // Filtered courses for search
   const filteredCourses = courses.filter(c => {
     const code = (c.courseCode || c.code || '').toLowerCase();
     const name = (c.name || '').toLowerCase();
@@ -71,14 +69,12 @@ export default function AdminDashboard() {
     return code.includes(q) || name.includes(q);
   });
 
-  // Registered students by program
   const studentsByProgram = users.filter(u => !u.isAdmin).reduce((acc, u) => {
     acc[u.program] = acc[u.program] || [];
     acc[u.program].push(u);
     return acc;
   }, {});
 
-  // Handlers
   const handleCourseFormChange = (e) => {
     const { name, value } = e.target;
     setCourseForm(prev => ({ ...prev, [name]: value }));
@@ -90,7 +86,6 @@ export default function AdminDashboard() {
       setStatus('Please fill all required fields.');
       return;
     }
-    // normalize fees
     const fees = {
       domestic: courseForm.domesticFee ? Number(courseForm.domesticFee) : undefined,
       international: courseForm.internationalFee ? Number(courseForm.internationalFee) : undefined
@@ -98,13 +93,11 @@ export default function AdminDashboard() {
 
     let updatedCourses;
     if (editingCourse) {
-      // Edit - keep courseCode same key (or allow change if needed)
       updatedCourses = courses.map(c =>
         c.courseCode === editingCourse.courseCode ? { ...courseForm, fees } : c
       );
       setStatus('Course updated.');
     } else {
-      // Create
       if (courses.find(c => c.courseCode === courseForm.courseCode)) {
         setStatus('Course code already exists.');
         return;
@@ -120,7 +113,6 @@ export default function AdminDashboard() {
 
   const handleEditCourse = (course) => {
     setEditingCourse(course);
-    // populate fees into form fields if present
     setCourseForm({
       courseCode: course.courseCode || '',
       name: course.name || '',
@@ -172,7 +164,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Course Management */}
       <div style={{ marginBottom: 24 }}>
         <h3>Manage Courses</h3>
         <form onSubmit={handleCreateOrEditCourse} style={{ marginBottom: 12 }}>
@@ -203,7 +194,6 @@ export default function AdminDashboard() {
             <input id="endDate" name="endDate" type="date" value={courseForm.endDate} onChange={handleCourseFormChange} />
           </div>
 
-          {/* Fee inputs - visible and labeled */}
           <div className="form-group">
             <label htmlFor="domesticFee">Domestic Fee (CAD)</label>
             <input id="domesticFee" name="domesticFee" type="number" min="0" placeholder="e.g. 9254" value={courseForm.domesticFee} onChange={handleCourseFormChange} />
@@ -245,7 +235,6 @@ export default function AdminDashboard() {
         </ul>
       </div>
 
-      {/* Registered Students */}
       <div style={{ marginBottom: 24 }}>
         <h3>Registered Students by Program</h3>
         {Object.keys(studentsByProgram).length === 0 && <p>No students registered.</p>}
@@ -261,7 +250,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Messages */}
       <div>
         <h3>Submitted Contact Forms</h3>
         {messages.length === 0 && <p>No messages submitted.</p>}

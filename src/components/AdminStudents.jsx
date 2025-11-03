@@ -21,7 +21,6 @@ export default function AdminStudents() {
     return <div className="signup-container"><h2>Admin Only</h2></div>;
   }
 
-  // Group students by program
   const studentsByProgram = users.filter(u => !u.isAdmin).reduce((acc, u) => {
     acc[u.program] = acc[u.program] || [];
     acc[u.program].push(u);

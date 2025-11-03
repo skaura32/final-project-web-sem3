@@ -35,7 +35,7 @@ export default function SignUp({ setUser }) {
     program: '',
     username: '',
     password: '',
-    role: 'student', // 'student' or 'admin'
+    role: 'student',
   });
   const [error, setError] = useState('');
 
@@ -48,7 +48,6 @@ export default function SignUp({ setUser }) {
     setForm(prev => ({
       ...prev,
       role: e.target.value,
-      // Clear program if switching to admin
       program: e.target.value === 'admin' ? '' : prev.program
     }));
   };
@@ -57,19 +56,16 @@ export default function SignUp({ setUser }) {
     e.preventDefault();
     setError('');
 
-    // Basic validation
     if (!form.firstName || !form.lastName || !form.email || !form.username || !form.password) {
       setError('Please fill required fields.');
       return;
     }
 
-    // Admin email restriction
     if (form.role === 'admin' && !form.email.endsWith('@bowvalley.ca')) {
       setError('Admin email must end with @bowvalley.ca');
       return;
     }
 
-    // Student must select program
     if (form.role === 'student' && !form.program) {
       setError('Please select a program.');
       return;
@@ -77,7 +73,6 @@ export default function SignUp({ setUser }) {
 
     const users = loadUsers();
 
-    // Prevent duplicate username/email
     if (users.find(u => u.username === form.username)) {
       setError('Username already exists.');
       return;
@@ -99,11 +94,9 @@ export default function SignUp({ setUser }) {
     users.push(newUser);
     saveUsers(users);
 
-    // Set currentUser and update app state (if setter provided)
     localStorage.setItem('currentUser', JSON.stringify(newUser));
     if (typeof setUser === 'function') setUser(newUser);
 
-    // Redirect to dashboard or admin dashboard
     if (newUser.isAdmin) {
       navigate('/admin');
     } else {
@@ -156,7 +149,7 @@ export default function SignUp({ setUser }) {
             <option value="SD">Software Development</option>
           </select>
         </div>
-        {/* Only show program if student */}
+        {}
         {form.role === 'student' && (
           <div className="form-group">
             <select name="program" value={form.program} onChange={handleChange} required>

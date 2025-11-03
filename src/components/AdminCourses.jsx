@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-function loadCourses() {
-  try {
-    const raw = localStorage.getItem('courses');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-function saveCourses(courses) {
-  localStorage.setItem('courses', JSON.stringify(courses));
-}
+import { loadAllCourses, saveAdminCourses } from '../data/coursesData';
 
 export default function AdminCourses() {
   const admin = JSON.parse(localStorage.getItem('currentUser'));
@@ -29,30 +18,13 @@ export default function AdminCourses() {
   });
   const [status, setStatus] = useState('');
 
-  // Load & normalize courses once
   useEffect(() => {
-    const raw = loadCourses();
-    const normalized = (raw || []).map(c => {
-      const courseCode = c.courseCode || c.code || '';
-      const feesFromTop = c.fees || {};
-      // support legacy domesticFee/internationalFee keys
-      const fees = {
-        domestic: feesFromTop.domestic ?? (c.domesticFee ? Number(c.domesticFee) : undefined),
-        international: feesFromTop.international ?? (c.internationalFee ? Number(c.internationalFee) : undefined)
-      };
-      return {
-        ...c,
-        courseCode,
-        name: c.name || c.courseName || '',
-        term: c.term || c.semester || '',
-        startDate: c.startDate || '',
-        endDate: c.endDate || '',
-        description: c.description || '',
-        fees: (fees.domestic || fees.international) ? fees : undefined
-      };
-    });
-    setCourses(normalized);
+    setCourses(loadAllCourses());
   }, []);
+
+  useEffect(() => {
+    console.log('editingCourse changed =>', editingCourse);
+  }, [editingCourse]);
 
   const filteredCourses = courses.filter(c => {
     const q = (search || '').toLowerCase();
@@ -78,47 +50,46 @@ export default function AdminCourses() {
       international: courseForm.internationalFee ? Number(courseForm.internationalFee) : undefined
     };
 
-    let updatedCourses;
-    if (editingCourse) {
-      updatedCourses = courses.map(c =>
-        (c.courseCode === editingCourse.courseCode)
-          ? {
-              ...c,
-              courseCode: courseForm.courseCode,
-              name: courseForm.name,
-              term: courseForm.term,
-              startDate: courseForm.startDate,
-              endDate: courseForm.endDate,
-              description: courseForm.description,
-              fees: (fees.domestic || fees.international) ? fees : undefined
-            }
-          : c
-      );
-      setStatus('Course updated.');
-    } else {
-      if (courses.find(c => c.courseCode === courseForm.courseCode)) {
-        setStatus('Course code already exists.');
-        return;
+    const courseData = {
+      courseCode: courseForm.courseCode,
+      name: courseForm.name,
+      term: courseForm.term,
+      startDate: courseForm.startDate,
+      endDate: courseForm.endDate,
+      description: courseForm.description,
+      fees: (fees.domestic || fees.international) ? fees : undefined,
+      program: 'Software Development - Custom',
+      isCustom: editingCourse ? editingCourse.isCustom : true
+    };
+
+    try {
+      let updatedCourses;
+      
+      if (editingCourse) {
+        updatedCourses = courses.map(c => 
+          c.courseCode === editingCourse.courseCode ? courseData : c
+        );
+        setStatus('Course updated successfully.');
+      } else {
+        if (courses.find(c => c.courseCode === courseForm.courseCode)) {
+          setStatus('Course code already exists.');
+          return;
+        }
+        updatedCourses = [...courses, courseData];
+        setStatus('Course created successfully.');
       }
-      const newCourse = {
-        courseCode: courseForm.courseCode,
-        name: courseForm.name,
-        term: courseForm.term,
-        startDate: courseForm.startDate,
-        endDate: courseForm.endDate,
-        description: courseForm.description,
-        fees: (fees.domestic || fees.international) ? fees : undefined
-      };
-      updatedCourses = [...courses, newCourse];
-      setStatus('Course created.');
+      
+      setCourses(updatedCourses);
+      saveAdminCourses(updatedCourses);
+      setEditingCourse(null);
+      setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
+    } catch (error) {
+      setStatus(error.message);
     }
-    setCourses(updatedCourses);
-    saveCourses(updatedCourses);
-    setEditingCourse(null);
-    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
   };
 
   const handleEditCourse = (course) => {
+    console.log('Editing course:', course);
     setEditingCourse(course);
     setCourseForm({
       courseCode: course.courseCode || '',
@@ -130,17 +101,33 @@ export default function AdminCourses() {
       internationalFee: course.fees && course.fees.international ? String(course.fees.international) : '',
       description: course.description || ''
     });
-    setStatus('');
+    setStatus('Editing course: ' + course.name);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      const el = document.querySelector('input[name="courseCode"]');
+      if (el) el.focus();
+    }, 300);
   };
 
   const handleDeleteCourse = (courseCode) => {
+    console.log('Deleting course:', courseCode); 
+
     if (!window.confirm('Delete this course?')) return;
-    const updatedCourses = courses.filter(c => c.courseCode !== courseCode);
-    setCourses(updatedCourses);
-    saveCourses(updatedCourses);
-    setStatus('Course deleted.');
-    setEditingCourse(null);
-    setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
+    
+    try {
+      const updatedCourses = courses.filter(c => c.courseCode !== courseCode);
+      setCourses(updatedCourses);
+      saveAdminCourses(updatedCourses);
+      setStatus('Course deleted successfully.');
+      
+      if (editingCourse && editingCourse.courseCode === courseCode) {
+        setEditingCourse(null);
+        setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' });
+      }
+    } catch (error) {
+      setStatus(error.message);
+    }
   };
 
   if (!admin || !admin.isAdmin) {
@@ -150,6 +137,7 @@ export default function AdminCourses() {
   return (
     <div className="signup-container">
       <h2>Manage Courses</h2>
+      
       <form onSubmit={handleCreateOrEditCourse} style={{ marginBottom: 12 }}>
         <div className="form-group">
           <label>Course Code</label>
@@ -180,8 +168,6 @@ export default function AdminCourses() {
           </div>
         </div>
 
-        <div style={{ height: 8 }} />
-
         <div className="form-row" style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
             <label>Domestic Fee (CAD)</label>
@@ -201,15 +187,27 @@ export default function AdminCourses() {
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <button type="submit">{editingCourse ? 'Update Course' : 'Create Course'}</button>
           {editingCourse && (
-            <button type="button" style={{ marginLeft: 8 }} onClick={() => { setEditingCourse(null); setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' }); }}>Cancel</button>
+            <button type="button" onClick={() => { 
+              setEditingCourse(null); 
+              setCourseForm({ courseCode: '', name: '', term: '', startDate: '', endDate: '', domesticFee: '', internationalFee: '', description: '' }); 
+            }}>
+              Cancel
+            </button>
           )}
         </div>
       </form>
 
-      {status && <div className="message success">{status}</div>}
+      {status && <div className="message success" style={{color: status.includes('error') || status.includes('Cannot') || status.includes('already exists') ? 'red' : 'green'}}>{status}</div>}
 
       <div className="search-row">
         <input className="search-input" placeholder="Search courses by code or name" value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
+      <div style={{ marginTop: 24, marginBottom: 12 }}>
+        <h3>All Courses ({filteredCourses.length})</h3>
+        <p style={{ color: '#6b7280', fontSize: '14px' }}>
+          {filteredCourses.length === 0 ? 'No courses found.' : 'Showing all courses.'}
+        </p>
       </div>
 
       <ul className="course-list">
@@ -217,19 +215,32 @@ export default function AdminCourses() {
           <li key={c.courseCode} className="course-item">
             <div>
               <strong>{c.courseCode}</strong> — {c.name} <em>({c.term})</em>
-              {c.startDate && <> | Start: {c.startDate}</>}
-              {c.endDate && <> | End: {c.endDate}</>}
+              {c.description && <p style={{ fontSize: '14px', margin: '4px 0', color: '#666' }}>{c.description}</p>}
               {c.fees && (
-                <div style={{ marginTop: 6, color: '#374151' }}>
-                  Fees: {c.fees.domestic ? '$' + c.fees.domestic.toLocaleString() + ' (domestic)' : '—'}
-                  {c.fees.international ? ' / $' + c.fees.international.toLocaleString() + ' (international)' : ''}
-                </div>
+                <p style={{ fontSize: '12px', color: '#888' }}>
+                  Fees: {c.fees.domestic && `$${c.fees.domestic.toLocaleString()} (domestic)`}
+                  {c.fees.domestic && c.fees.international && ' / '}
+                  {c.fees.international && `$${c.fees.international.toLocaleString()} (international)`}
+                </p>
               )}
-              {c.description && <div style={{ marginTop: 6, color: '#6b7280' }}>{c.description}</div>}
             </div>
             <div>
-              <button className="btn" onClick={() => handleEditCourse(c)}>Edit</button>
-              <button className="btn remove-btn" onClick={() => handleDeleteCourse(c.courseCode)}>Delete</button>
+              <button 
+                type="button"
+                className="btn" 
+                onClick={() => handleEditCourse(c)}
+                title="Edit course"
+              >
+                Edit
+              </button>
+              <button 
+                type="button"
+                className="btn remove-btn" 
+                onClick={() => handleDeleteCourse(c.courseCode)}
+                title="Delete course"
+              >
+                Delete
+              </button>
             </div>
           </li>
         ))}
