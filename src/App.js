@@ -1,4 +1,7 @@
 ﻿// filepath: src/App.js
+import Home from "./components/Home";
+
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar'; // or './components/navbar' if your file is lowercase
@@ -34,6 +37,8 @@ function App() {
         <NavBar user={user} onLogout={handleLogout} />
         <main className="content">
           <Routes>
+            <Route path="/" element={<Home />} />
+
             <Route path="/" element={
               <div style={{ padding: 20 }}>
                 <h1>Welcome to Bow Valley Course Registration</h1>
@@ -46,7 +51,8 @@ function App() {
               </div>
             } />
             <Route path="/signup" element={<SignUp setUser={setUser} />} />
-            <Route path="/login" element={<Login setUser={setUser} />} />
+           <Route path="/" element={<Home />} />
+           <Route path="/login" element={<Login setUser={setUser} />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/courses" element={<Courses />} />
