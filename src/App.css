@@ -2,6 +2,18 @@
   text-align: center;
 }
 
+/* Global base styles */
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #f8fafc;
+  color: #0f172a;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Utility container used across pages */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -347,20 +359,26 @@ button:hover {
 
 .contact-container textarea { font-family: inherit; }
 .contact-container .course-item { padding: 10px 12px; border: 1px solid #f3f4f6; border-radius: 8px; background: #fff; }
+.page-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
 .hero-image {
-  width: 100%;                
-  height: 790px;             
-  object-fit: cover;        
-  object-position: center; 
-  position: fixed;            
-  top: 0;
-  left: 0;
-  z-index: -1;               
+  width: 100%;
+  max-height: 60vh;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  margin: 0 auto 1.25rem auto;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(17,24,39,0.06);
 }
 
 .page-content {
-  margin-top: 300px;         
-  padding: 20px;
+  padding: 20px 0;
 }
 
 /* Responsive */
