@@ -168,11 +168,6 @@ button:hover {
   background-color: #f8d7da;
   border-radius: 4px;
 }
-
-<<<<<<< HEAD
-
-=======
->>>>>>> a1a0dfb3c6c9d2e0b98d9f0ff71cadb595b7deea
 .courses-page {
   background: #ffffff;
   border-radius: 10px;
@@ -224,11 +219,6 @@ button:hover {
   align-items: flex-start;
   margin-top: 8px;
 }
-
-<<<<<<< HEAD
-
-=======
->>>>>>> a1a0dfb3c6c9d2e0b98d9f0ff71cadb595b7deea
 .available-column {
   flex: 1;
   min-width: 0;
@@ -238,11 +228,6 @@ button:hover {
   width: 380px;
   max-width: 45%;
 }
-
-<<<<<<< HEAD
-
-=======
->>>>>>> a1a0dfb3c6c9d2e0b98d9f0ff71cadb595b7deea
 .courses-page h4 {
   margin: 0 0 10px 0;
   color: #111827;
@@ -362,8 +347,6 @@ button:hover {
 
 .contact-container textarea { font-family: inherit; }
 .contact-container .course-item { padding: 10px 12px; border: 1px solid #f3f4f6; border-radius: 8px; background: #fff; }
-
-<<<<<<< HEAD
 .hero-image {
   width: 100%;                
   height: 790px;             
@@ -380,13 +363,7 @@ button:hover {
   padding: 20px;
 }
 
-
-
-
-
 /* Responsive */
-=======
->>>>>>> a1a0dfb3c6c9d2e0b98d9f0ff71cadb595b7deea
 @media (max-width: 860px) {
   .courses-flex {
     flex-direction: column;

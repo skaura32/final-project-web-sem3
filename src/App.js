@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 ﻿// filepath: src/App.js
-import Home from "./components/Home";
-
-
 import React, { useState, useEffect } from 'react';
-=======
-﻿import React, { useState, useEffect } from 'react';
->>>>>>> a1a0dfb3c6c9d2e0b98d9f0ff71cadb595b7deea
+import Home from "./components/Home";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar'; 
 import SignUp from './components/SignUp';
