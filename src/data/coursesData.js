@@ -31,13 +31,11 @@ export const SAMPLE_COURSES = [
     description: 'Intro to cloud services and deployment.' },
 ];
 
-// Unified course management functions
 export function loadAllCourses() {
   try {
     const adminCourses = JSON.parse(localStorage.getItem('adminCourses') || '[]');
     const allCourses = [...SAMPLE_COURSES];
-    
-    // Add admin-created courses
+
     adminCourses.forEach(adminCourse => {
       if (!allCourses.find(c => c.courseCode === adminCourse.courseCode)) {
         allCourses.push({...adminCourse, isCustom: true});
@@ -51,7 +49,6 @@ export function loadAllCourses() {
 }
 
 export function saveAdminCourses(courses) {
-  // Only save custom courses (not sample courses)
   const customCourses = courses.filter(course => course.isCustom);
   localStorage.setItem('adminCourses', JSON.stringify(customCourses));
 }

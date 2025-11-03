@@ -66,7 +66,6 @@ export default function AdminCourses() {
           setStatus('Cannot edit system courses. Create a new course instead.');
           return;
         }
-        // Update course
         updatedCourses = courses.map(c => 
           c.courseCode === editingCourse.courseCode ? courseData : c
         );
@@ -76,7 +75,6 @@ export default function AdminCourses() {
           setStatus('Course code already exists.');
           return;
         }
-        // Add new course
         updatedCourses = [...courses, courseData];
         setStatus('Course created successfully.');
       }
@@ -91,7 +89,7 @@ export default function AdminCourses() {
   };
 
   const handleEditCourse = (course) => {
-    console.log('Editing course:', course); // Debug log
+    console.log('Editing course:', course); 
     
     if (!course.isCustom) {
       setStatus('System courses cannot be edited. You can create a new course instead.');
@@ -113,7 +111,7 @@ export default function AdminCourses() {
   };
 
   const handleDeleteCourse = (courseCode) => {
-    console.log('Deleting course:', courseCode); // Debug log
+    console.log('Deleting course:', courseCode); 
     
     const course = courses.find(c => c.courseCode === courseCode);
     if (course && !course.isCustom) {
