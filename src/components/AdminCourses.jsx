@@ -22,7 +22,6 @@ export default function AdminCourses() {
     setCourses(loadAllCourses());
   }, []);
 
-  // debug: monitor editingCourse changes
   useEffect(() => {
     console.log('editingCourse changed =>', editingCourse);
   }, [editingCourse]);
@@ -60,7 +59,6 @@ export default function AdminCourses() {
       description: courseForm.description,
       fees: (fees.domestic || fees.international) ? fees : undefined,
       program: 'Software Development - Custom',
-      // Preserve isCustom when editing; new courses are custom
       isCustom: editingCourse ? editingCourse.isCustom : true
     };
 
@@ -68,7 +66,6 @@ export default function AdminCourses() {
       let updatedCourses;
       
       if (editingCourse) {
-        // allow editing any course (system or custom)
         updatedCourses = courses.map(c => 
           c.courseCode === editingCourse.courseCode ? courseData : c
         );
@@ -93,8 +90,6 @@ export default function AdminCourses() {
 
   const handleEditCourse = (course) => {
     console.log('Editing course:', course);
-
-    // allow editing system courses too
     setEditingCourse(course);
     setCourseForm({
       courseCode: course.courseCode || '',
@@ -108,7 +103,6 @@ export default function AdminCourses() {
     });
     setStatus('Editing course: ' + course.name);
 
-    // scroll and focus form input to make changes obvious
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       const el = document.querySelector('input[name="courseCode"]');
@@ -118,8 +112,7 @@ export default function AdminCourses() {
 
   const handleDeleteCourse = (courseCode) => {
     console.log('Deleting course:', courseCode); 
-    
-    // allow deleting any course (system or custom)
+
     if (!window.confirm('Delete this course?')) return;
     
     try {
