@@ -2,7 +2,6 @@
   text-align: center;
 }
 
-/* Global base styles */
 body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background: #f8fafc;
@@ -29,18 +28,17 @@ body {
   margin: 0;
 }
 
-/* Utility container used across pages */
 .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
 .hero{
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
-  min-height: 100vh; /* cover the whole viewport */
+  min-height: 100vh; 
   display: flex;
   align-items: center;
 }
 
-.hero-overlay{ /* subtle dark overlay to keep text readable */
+.hero-overlay{ 
   width:100%;
   min-height:inherit;
   background: linear-gradient(rgba(3,7,18,0.35), rgba(3,7,18,0.18));
@@ -420,7 +418,6 @@ button:hover {
   padding: 20px 0;
 }
 
-/* Responsive */
 @media (max-width: 860px) {
   .courses-flex {
     flex-direction: column;
@@ -432,7 +429,6 @@ button:hover {
   .course-name { max-width: 180px; }
 }
 
-/* Admin / Dashboard improvements */
 .signup-container {
   background: var(--card);
   border-radius: var(--radius);
@@ -454,22 +450,18 @@ button:hover {
 .course-item > div:first-child { flex: 1 1 auto; min-width: 0; }
 .course-item button { margin-left: 8px; }
 
-/* Program cards polishing */
 .program-card { padding: 18px; border-radius: 12px; transition: transform .12s ease, box-shadow .12s ease; }
 .program-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(2,6,23,0.06); }
 .program-title { font-weight: 700; }
 
-/* Dashboard container */
 .dashboard-container { max-width: 1100px; margin: 2rem auto; padding: 1.25rem; }
 .dashboard-header { background: var(--card); padding: 1rem; border-radius: var(--radius); box-shadow: 0 8px 30px rgba(2,6,23,0.04); }
 
-/* Contact page */
 .contact-container { background: var(--card); padding: 1.25rem; border-radius: var(--radius); box-shadow: 0 8px 30px rgba(2,6,23,0.04); }
 .contact-container form { display:flex; flex-direction:column; gap:12px; }
 .contact-container textarea { min-height: 140px; resize: vertical; padding: 10px; border-radius: 8px; border: 1px solid #e5e7eb; }
 .contact-container .btn { align-self:flex-start; }
 
-/* Buttons & inputs tweaks */
 .form-group label { font-weight:600; display:block; margin-bottom:6px; }
 .form-group input, .form-group select, .search-input { padding: 10px 12px; border-radius: 8px; border:1px solid #e6e6e6; }
 .btn, button { transition: transform .08s ease, box-shadow .08s ease; }

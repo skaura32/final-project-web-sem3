@@ -24,11 +24,11 @@ const getConnection = async () => {
     try {
         if (!poolPromise) {
             poolPromise = sql.connect(config);
-            console.log('✓ Database connection pool created');
+            console.log('Database connection pool created');
         }
         return await poolPromise;
     } catch (err) {
-        console.error('✗ Database connection failed:', err.message);
+        console.error('Database connection failed:', err.message);
         throw err;
     }
 };

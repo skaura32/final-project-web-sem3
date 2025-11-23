@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { sql, getConnection } = require('../config/database');
 
-// GET enrollments for a user
 router.get('/user/:userId', async (req, res) => {
     try {
         const pool = await getConnection();
@@ -20,7 +19,6 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
-// POST enroll in course
 router.post('/', async (req, res) => {
     try {
         const { user_id, course_id, term } = req.body;
@@ -42,7 +40,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// DELETE enrollment
 router.delete('/:id', async (req, res) => {
     try {
         const pool = await getConnection();

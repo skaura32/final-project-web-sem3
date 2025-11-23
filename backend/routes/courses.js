@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { sql, getConnection } = require('../config/database');
 
-// GET all courses
 router.get('/', async (req, res) => {
     try {
         const pool = await getConnection();
@@ -13,7 +12,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET courses by term
 router.get('/term/:term', async (req, res) => {
     try {
         const pool = await getConnection();
@@ -26,7 +24,6 @@ router.get('/term/:term', async (req, res) => {
     }
 });
 
-// POST create new course
 router.post('/', async (req, res) => {
     try {
         const { course_code, name, term, program, description, start_date, end_date, domestic_fee, international_fee, created_by } = req.body;
@@ -55,7 +52,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT update course
 router.put('/:id', async (req, res) => {
     try {
         const { name, term, program, description, start_date, end_date, domestic_fee, international_fee } = req.body;
@@ -86,7 +82,6 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE course
 router.delete('/:id', async (req, res) => {
     try {
         const pool = await getConnection();

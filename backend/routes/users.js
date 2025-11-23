@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { sql, getConnection } = require('../config/database');
 
-// GET all users
 router.get('/', async (req, res) => {
     try {
         const pool = await getConnection();
@@ -13,7 +12,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET user by ID
 router.get('/:id', async (req, res) => {
     try {
         const pool = await getConnection();
@@ -30,7 +28,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST create new user (signup)
 router.post('/', async (req, res) => {
     try {
         const { student_id, username, password, email, first_name, last_name, phone, birthday, department, program } = req.body;
@@ -59,7 +56,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// POST login
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;

@@ -20,7 +20,6 @@ export default function Home() {
       </header>
 
       <main className="container page-content">
-        {/* Keep this area for intro or quick links if needed */}
         <section className="intro-card card">
           <h2>Get started</h2>
           <p className="muted">Sign up or log in to begin registering for courses.</p>

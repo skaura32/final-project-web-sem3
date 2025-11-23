@@ -31,7 +31,6 @@ export default function Courses() {
   const [message, setMessage] = useState('');
   const [detailsCourse, setDetailsCourse] = useState(null);
 
-  // Load courses from shared data source
   useEffect(() => {
     const courses = loadAllCourses();
     setAllCourses(courses);
@@ -52,8 +51,7 @@ export default function Courses() {
 
     const regs = loadRegistrations(user.studentId);
     const termCourses = regs[term] || [];
-    
-    // Convert course codes to course objects
+  
     const selectedCourses = termCourses.map(courseCode => {
       return allCourses.find(c => c.courseCode === courseCode) || { courseCode, name: courseCode };
     });

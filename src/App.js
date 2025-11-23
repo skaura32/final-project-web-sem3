@@ -1,5 +1,4 @@
-﻿// filepath: src/App.js
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import Home from "./components/Home";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar'; 
@@ -55,7 +54,7 @@ function App() {
             <Route path="/programs" element={<Programs />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/contact" element={<Contact />} />
-            {/* Admin routes */}
+          
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/students" element={<AdminStudents />} />
