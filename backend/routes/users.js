@@ -1,78 +1,162 @@
 const express = require('express');
 const router = express.Router();
-const { sql, getConnection } = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
+const bcrypt = require('bcrypt');
 
-router.get('/', async (req, res) => {
+// POST - Register new student
+router.post('/register', async (req, res) => {
     try {
-        const pool = await getConnection();
-        const result = await pool.request().query('SELECT * FROM Users');
-        res.json(result.recordset);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-router.get('/:id', async (req, res) => {
-    try {
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('id', sql.Int, req.params.id)
-            .query('SELECT * FROM Users WHERE user_id = @id');
+        const { 
+            first_name, 
+            last_name, 
+            email, 
+            phone, 
+            birthday, 
+            department, 
+            program, 
+            username, 
+            password 
+        } = req.body;
         
-        if (result.recordset.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+        // Validation
+        if (!first_name || !last_name || !email || !username || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Missing required fields',
+                required: ['first_name', 'last_name', 'email', 'username', 'password']
+            });
         }
-        res.json(result.recordset[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-router.post('/', async (req, res) => {
-    try {
-        const { student_id, username, password, email, first_name, last_name, phone, birthday, department, program } = req.body;
         
-        const pool = await getConnection();
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Generate student ID
+        const student_id = 'STU' + Date.now();
+        
+        const pool = await poolPromise;
         const result = await pool.request()
-            .input('student_id', sql.VarChar, student_id)
-            .input('username', sql.VarChar, username)
-            .input('password', sql.VarChar, password)
-            .input('email', sql.VarChar, email)
-            .input('first_name', sql.VarChar, first_name)
-            .input('last_name', sql.VarChar, last_name)
-            .input('phone', sql.VarChar, phone)
-            .input('birthday', sql.Date, birthday)
-            .input('department', sql.VarChar, department)
-            .input('program', sql.VarChar, program)
+            .input('student_id', sql.VarChar(20), student_id)
+            .input('username', sql.VarChar(50), username)
+            .input('password', sql.VarChar(255), hashedPassword)
+            .input('email', sql.VarChar(100), email)
+            .input('first_name', sql.VarChar(50), first_name)
+            .input('last_name', sql.VarChar(50), last_name)
+            .input('phone', sql.VarChar(20), phone || null)
+            .input('birthday', sql.Date, birthday || null)
+            .input('department', sql.VarChar(10), department || 'SD')
+            .input('program', sql.VarChar(50), program || null)
             .query(`
-                INSERT INTO Users (student_id, username, password, email, first_name, last_name, phone, birthday, department, program)
-                OUTPUT INSERTED.*
-                VALUES (@student_id, @username, @password, @email, @first_name, @last_name, @phone, @birthday, @department, @program)
+                INSERT INTO Users 
+                (student_id, username, password, email, first_name, last_name, phone, birthday, department, program) 
+                VALUES (@student_id, @username, @password, @email, @first_name, @last_name, @phone, @birthday, @department, @program);
+                SELECT SCOPE_IDENTITY() AS userId;
             `);
         
-        res.status(201).json(result.recordset[0]);
+        res.status(201).json({ 
+            success: true, 
+            message: 'Student registered successfully', 
+            student_id: student_id,
+            userId: result.recordset[0].userId
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        if (err.number === 2627) { // Duplicate key
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username or email already exists' 
+            });
+        }
+        res.status(500).json({ 
+            success: false, 
+            error: 'Database error', 
+            details: err.message 
+        });
     }
 });
 
+// POST - Student login
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('username', sql.VarChar, username)
-            .input('password', sql.VarChar, password)
-            .query('SELECT * FROM Users WHERE username = @username AND password = @password');
-        
-        if (result.recordset.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+        if (!username || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username and password are required' 
+            });
         }
         
-        res.json(result.recordset[0]);
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('username', sql.VarChar(50), username)
+            .query('SELECT * FROM Users WHERE username = @username');
+        
+        if (result.recordset.length === 0) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid credentials' 
+            });
+        }
+        
+        const user = result.recordset[0];
+        
+        // Compare passwords
+        const match = await bcrypt.compare(password, user.password);
+        
+        if (!match) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid credentials' 
+            });
+        }
+        
+        // Remove password from response
+        delete user.password;
+        
+        res.json({ 
+            success: true, 
+            message: 'Login successful', 
+            user: user
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ 
+            success: false, 
+            error: 'Server error', 
+            details: err.message 
+        });
+    }
+});
+
+// GET - Get user profile by student_id
+router.get('/profile/:studentId', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('studentId', sql.VarChar(20), req.params.studentId)
+            .query(`
+                SELECT 
+                    user_id, student_id, username, email, first_name, last_name, 
+                    phone, birthday, department, program, is_admin, created_at 
+                FROM Users 
+                WHERE student_id = @studentId
+            `);
+        
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'User not found' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            user: result.recordset[0] 
+        });
+    } catch (err) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'Database error', 
+            details: err.message 
+        });
     }
 });
 

@@ -1,46 +1,45 @@
+USE bow_course_registration;
+GO
+
+-- Insert Admin User (password: admin123)
 INSERT INTO Users (student_id, username, password, email, first_name, last_name, department, is_admin)
-VALUES ('BVCADMIN1', 'admin', 'admin123', 'admin@bowvalley.ca', 'Admin', 'User', 'SD', 1);
+VALUES ('ADMIN001', 'admin', '$2b$10$XPmKzHvz9xQY5t5KZqW3yO7lQlPQw9YZQkJzp5X8f5JfZm5KZqW3y', 'admin@bow.ca', 'Admin', 'User', 'SD', 1);
 
-INSERT INTO Users (student_id, username, password, email, first_name, last_name, phone, birthday, department, program, is_admin)
+-- Insert Sample Students (password: student123)
+INSERT INTO Users (student_id, username, password, email, first_name, last_name, phone, birthday, department, program)
 VALUES 
-('BVCS12345', 'john.doe', 'password123', 'john.doe@student.bowvalley.ca', 'John', 'Doe', '403-555-0001', '2000-05-15', 'SD', 'diploma', 0),
-('BVCS67890', 'jane.smith', 'password123', 'jane.smith@student.bowvalley.ca', 'Jane', 'Smith', '403-555-0002', '1999-08-22', 'SD', 'postDiploma', 0),
-('BVCST1234', 'bob.wilson', 'password123', 'bob.wilson@student.bowvalley.ca', 'Bob', 'Wilson', '403-555-0003', '2001-03-10', 'SD', 'certificate', 0);
+('STU001', 'john.doe', '$2b$10$XPmKzHvz9xQY5t5KZqW3yO7lQlPQw9YZQkJzp5X8f5JfZm5KZqW3y', 'john.doe@bow.ca', 'John', 'Doe', '403-123-4567', '2000-05-15', 'SD', 'Diploma'),
+('STU002', 'jane.smith', '$2b$10$XPmKzHvz9xQY5t5KZqW3yO7lQlPQw9YZQkJzp5X8f5JfZm5KZqW3y', 'jane.smith@bow.ca', 'Jane', 'Smith', '403-234-5678', '1999-08-20', 'SD', 'Post-Diploma'),
+('STU003', 'mike.wilson', '$2b$10$XPmKzHvz9xQY5t5KZqW3yO7lQlPQw9YZQkJzp5X8f5JfZm5KZqW3y', 'mike.wilson@bow.ca', 'Mike', 'Wilson', '403-345-6789', '2001-03-10', 'SD', 'Certificate');
 
+-- Insert Programs
 INSERT INTO Programs (program_id, title, term, description, start_date, end_date, domestic_fee, international_fee, classification)
 VALUES 
-('SD-DIP', 'Software Development - Diploma (2 years)', 'Winter', 
- 'A comprehensive two-year software development diploma program designed to equip students with practical skills in programming, web and mobile development, and software engineering principles.',
- '2024-09-05', '2026-06-15', 9254.00, 27735.00, 'Diploma'),
-('SD-POST', 'Software Development - Post-Diploma (1 year)', 'Winter',
- 'Jumpstart your tech career with our one-year post-diploma program in software development, focused on practical, job-ready skills.',
- '2024-09-05', '2025-06-15', 7895.00, 23675.00, 'Post-Diploma');
+('SD-DIP', 'Software Development - Diploma', 'Winter', 'A comprehensive two-year software development diploma program', '2024-09-05', '2026-06-15', 9254.00, 27735.00, '2 years'),
+('SD-POST', 'Software Development - Post-Diploma', 'Winter', 'One-year post-diploma program in software development', '2024-09-05', '2025-06-15', 7895.00, 23675.00, '1 year'),
+('SD-CERT', 'Software Development - Certificate', 'Spring', 'Six-month certificate program', '2025-03-01', '2025-08-30', 4500.00, 13500.00, '6 months');
 
-INSERT INTO Courses (course_code, name, term, program, description, start_date, end_date, domestic_fee, international_fee, is_custom)
+-- Insert Courses
+INSERT INTO Courses (course_code, name, term, program, description, start_date, end_date, domestic_fee, international_fee)
 VALUES 
-('MGMT201', 'Essential Skills for Teams Collaboration', 'Spring', 'Software Development - Diploma',
- 'practical skills in effective communication and teamwork.', '2024-03-01', '2024-06-30', 854.00, 2035.00, 0),
-('SD102', 'Web Programming I', 'Spring', 'Software Development - Diploma',
- 'HTML, CSS, basic JavaScript and DOM.', '2024-03-01', '2024-06-30', 850.00, 2000.00, 0),
-('SD201', 'Introduction to Relational Databases', 'Fall', 'Software Development - Diploma',
- 'Relational databases, SQL, normalization.', '2024-09-05', '2024-12-20', 854.00, 2735.00, 0),
-('SD202', 'Web Programming II', 'Fall', 'Software Development - Diploma',
- 'Advanced JS, frameworks and REST APIs.', '2024-09-05', '2024-12-20', 800.00, 2050.00, 0),
-('SD301', 'Mobile Application Development with React', 'Summer', 'Software Development - Post-Diploma',
- 'Mobile app basics for Android/iOS.', '2024-06-01', '2024-08-31', 895.00, 2675.00, 0),
-('SD302', 'Object Oriented Programming', 'Winter', 'Software Development - Certificate',
- 'Object Oriented design concepts and techniques', '2025-01-05', '2025-03-31', 850.00, 2000.00, 0);
+('SODV1201', 'Introduction to Programming', 'Fall', 'Diploma', 'Learn programming fundamentals', '2024-09-05', '2024-12-15', 1200.00, 3600.00),
+('SODV2201', 'Web Programming', 'Winter', 'Diploma', 'Full-stack web development', '2025-01-10', '2025-04-15', 1200.00, 3600.00),
+('SODV3201', 'Mobile App Development', 'Spring', 'Diploma', 'Build mobile applications', '2025-03-01', '2025-06-15', 1200.00, 3600.00),
+('SODV4201', 'Cloud Computing', 'Fall', 'Post-Diploma', 'Cloud technologies and deployment', '2024-09-05', '2024-12-15', 1500.00, 4500.00),
+('SODV1101', 'Database Fundamentals', 'Winter', 'Certificate', 'Introduction to databases', '2025-01-10', '2025-04-15', 1000.00, 3000.00);
 
-INSERT INTO Enrollments (user_id, course_id, term)
+-- Insert Enrollments
+INSERT INTO Enrollments (user_id, course_id, term, status)
 VALUES 
-(2, 1, 'Spring'),
-(2, 2, 'Spring'),
-(3, 3, 'Fall'),
-(3, 4, 'Fall');
+(2, 1, 'Fall', 'active'),
+(2, 2, 'Winter', 'active'),
+(3, 4, 'Fall', 'active'),
+(4, 5, 'Winter', 'active');
 
-INSERT INTO Messages (user_id, name, email, subject, message, is_read)
+-- Insert Sample Messages
+INSERT INTO Messages (user_id, name, email, subject, message)
 VALUES 
-(2, 'John Doe', 'john.doe@student.bowvalley.ca', 'Question about enrollment', 
- 'Hi, I have a question about enrolling in additional courses for the Fall term.', 0),
-(3, 'Jane Smith', 'jane.smith@student.bowvalley.ca', 'Course material access', 
- 'I am unable to access the course materials for SD201. Can you help?', 1);
+(2, 'John Doe', 'john.doe@bow.ca', 'Course Registration Issue', 'I am having trouble registering for SODV3201. Please help.'),
+(3, 'Jane Smith', 'jane.smith@bow.ca', 'Payment Question', 'When is the payment deadline for Winter term?');
+
+GO

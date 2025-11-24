@@ -1,39 +1,19 @@
-const sql = require('mssql');
-require('dotenv').config();
-
-const config = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER,
-    database: process.env.DB_NAME,
+const dbConfig = {
+    user: 'kritika',
+    password: 'j007@j007',
+    server: 'LAPTOP-P8TVVSSQ\\SQLEXPRESS',
+    database: 'bow_course_registration',
     options: {
         encrypt: false,
         trustServerCertificate: true,
         enableArithAbort: true
     },
-    pool: {
-        max: 10,
-        min: 0,
-        idleTimeoutMillis: 30000
-    }
+    port: 1433
 };
 
-let poolPromise;
+console.log('🔧 Using SQL Server Authentication');
+console.log('   User:', dbConfig.user);
+console.log('   Server:', dbConfig.server);
+console.log('   Database:', dbConfig.database);
 
-const getConnection = async () => {
-    try {
-        if (!poolPromise) {
-            poolPromise = sql.connect(config);
-            console.log('Database connection pool created');
-        }
-        return await poolPromise;
-    } catch (err) {
-        console.error('Database connection failed:', err.message);
-        throw err;
-    }
-};
-
-module.exports = {
-    sql,
-    getConnection
-};
+module.exports = dbConfig;
