@@ -19,6 +19,96 @@ body {
   --radius: 10px;
 }
 
+/* ---------------------------------------------
+   Visual polish overrides (do not remove core selectors)
+   - Improve color palette, spacing, typographic scale
+   - Add focus states and better button styling
+   - Align signup radio buttons
+---------------------------------------------- */
+
+:root{
+  --accent: #06b6d4;
+  --surface: #ffffff;
+  --muted-2: #9aa4b2;
+}
+
+/* Gentle background gradient */
+body {
+  background: linear-gradient(180deg, var(--bg), #eef3f8);
+}
+
+/* Slightly larger base font & better spacing */
+body, input, select, textarea, button { font-size: 16px; }
+
+/* Nav: darker with subtle blur */
+nav {
+  background: linear-gradient(90deg, rgba(6,11,35,0.98), rgba(12,34,78,0.98));
+  box-shadow: 0 6px 24px rgba(2,6,23,0.12);
+}
+nav ul li a { padding: 8px 12px; border-radius: 8px; }
+
+/* Links focused/hovered show a subtle background */
+nav ul li a:hover, nav ul li a:focus { background: rgba(11,116,255,0.06); color: var(--primary); }
+
+/* Modern buttons */
+button, .btn {
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+button.primary, .btn.add-btn { background: var(--primary); color: #fff; }
+button:hover, .btn:hover { transform: translateY(-2px); }
+button:active, .btn:active { transform: translateY(0); }
+
+/* Cards (signup/dash/contact) — soft surfaces and radius */
+.signup-container, .dashboard-container, .contact-container, .courses-page, .program-card { border-radius: 12px; }
+.signup-container, .dashboard-container, .contact-container { box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
+
+/* Input focus and accessibility */
+input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 4px rgba(11,116,255,0.12); border-color: rgba(11,116,255,0.3); }
+
+/* Form and label styling improvements */
+.form-group label { display:block; margin-bottom:8px; color: var(--muted); }
+.form-group input, .form-group select { border: 1px solid #e6e9ee; background: #fff; }
+
+/* Signup role radios alignment (fix the admin/student misalignment) */
+.signup-container .form-group:first-of-type { display:flex; gap: 12px; align-items: center; }
+.signup-container .form-group:first-of-type label { display:inline-flex; gap:8px; align-items:center; margin:0; }
+.signup-container .form-group:first-of-type input[type="radio"] { width:auto; height:auto; margin:0; }
+
+/* Secondary text muted color */
+.muted { color: var(--muted-2); }
+
+/* Program card improvements */
+.program-card { background: var(--surface); border: 1px solid rgba(2,6,23,0.04); }
+.program-card h3 { margin: 0 0 6px 0; }
+
+/* Courses list interactive feel */
+.course-item { background: linear-gradient(180deg, var(--surface) 0%, #fbfdff 100%); }
+.course-item .course-code { color: var(--text); }
+
+/* Hero text improvements */
+.hero-content h1 { font-weight: 700; letter-spacing: -0.01em; }
+.hero-sub { color: rgba(255,255,255,0.92); }
+
+/* Slightly smaller hero on small screens */
+@media (max-width: 420px) {
+  .hero-content { padding: 2rem 1rem; }
+  .hero-content h1 { font-size: 1.6rem; }
+}
+
+/* Improve form action button layout (keep full-width on mobile, inline on desktop) */
+@media (min-width: 640px) {
+  .signup-container form button { width: auto; padding: 0.65rem 1rem; }
+}
+
+/* Small screen spacing */
+@media (max-width: 860px) {
+  .container { padding: 0 1rem; }
+  .signup-container { padding: 1.25rem; }
+}
+
+
 body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background: var(--bg);
