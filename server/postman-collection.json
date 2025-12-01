@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "Bow Valley Student API",
+    "_postman_id": "b12c7b02-0000-4f2e-0000-000000000000",
+    "description": "Student feature endpoints for Assignment 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Auto\",\n  \"lastName\": \"Tester\",\n  \"email\": \"auto.test@example.com\",\n  \"username\": \"autotest\",\n  \"password\": \"pass1234\",\n  \"program\": \"SD\",\n  \"role\": \"student\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\": \"autotest\", \"password\": \"pass1234\"}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+      }
+    },
+    {
+      "name": "Get Programs",
+      "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/programs", "host": ["{{base_url}}"], "path": ["api", "programs"] } }
+    },
+    {
+      "name": "Get Courses",
+      "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/courses", "host": ["{{base_url}}"], "path": ["api", "courses"] } }
+    },
+    {
+      "name": "Search Courses (q=web)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/courses?q=web", "host": ["{{base_url}}"], "path": ["api", "courses"], "query": [{ "key": "q", "value": "web" }] }
+      }
+    },
+    {
+      "name": "Register for Courses",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+        "body": { "mode": "raw", "raw": "{\"term\":\"Fall\", \"courses\":[\"SD101\"]}" },
+        "url": { "raw": "{{base_url}}/api/registrations", "host": ["{{base_url}}"], "path": ["api", "registrations"] }
+      }
+    },
+    {
+      "name": "Get Registrations for Term",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }], "url": { "raw": "{{base_url}}/api/registrations/Fall", "host": ["{{base_url}}"], "path": ["api", "registrations", "Fall"] } }
+    },
+    {
+      "name": "Post Message",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }],
+        "body": { "mode": "raw", "raw": "{\"subject\":\"Test\",\"message\":\"Hello from Postman\"}" },
+        "url": { "raw": "{{base_url}}/api/messages", "host": ["{{base_url}}"], "path": ["api", "messages"] }
+      }
+    },
+    {
+      "name": "Get My Messages",
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }], "url": { "raw": "{{base_url}}/api/messages?mine=true", "host": ["{{base_url}}"], "path": ["api", "messages"], "query": [{ "key": "mine", "value": "true" }] } }
+    }
+  ],
+  "variable": [ { "key": "base_url", "value": "http://localhost:5000" }, { "key": "token", "value": "" } ]
+}
