@@ -80,14 +80,12 @@ async function run() {
   await targetPool.request().query(`
     IF OBJECT_ID('Messages') IS NULL
       CREATE TABLE Messages (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        user_id INT NULL,
-        name NVARCHAR(255),
-        email NVARCHAR(255),
+        id INT IDENTITY PRIMARY KEY,
+        user_id INT,
         subject NVARCHAR(255),
         message NVARCHAR(MAX),
-        created_at DATETIME DEFAULT GETDATE(),
-        is_read BIT DEFAULT 0
+        is_read BIT DEFAULT 0,
+        created_at DATETIME DEFAULT GETDATE()
       );
   `);
 

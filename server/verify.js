@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const assert = require('assert');
 
-const base = process.env.BASE_URL || 'http://localhost:5000';
+const base = process.env.BASE_URL || 'http://127.0.0.1:5000';
 
 async function post(path, body, token) {
   const headers = { 'Content-Type': 'application/json' };

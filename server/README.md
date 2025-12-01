@@ -27,6 +27,13 @@ cd server
 npm run migrate
 ```
 
+7. If you have an existing DB that used `read` as a column name for messages, run the rename/alter script:
+```powershell
+-- Run this script in SSMS or using sqlcmd
+-- server/sql-fix/alter-messages-rename.sql
+``` 
+This will add `is_read` column, copy data from `read` if present and drop the old `read` column.
+
 5. Start the backend server
 ```powershell
 npm start
