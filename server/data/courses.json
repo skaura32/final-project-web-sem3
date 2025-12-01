@@ -1,0 +1,26 @@
+[
+  {
+    "courseCode": "SD101",
+    "name": "Introduction to Software Development",
+    "description": "Basics of programming, problem solving and development workflow.",
+    "credits": 3,
+    "term": "Fall",
+    "program": "Software Development"
+  },
+  {
+    "courseCode": "SD201",
+    "name": "Web Development",
+    "description": "HTML, CSS, JavaScript and building responsive web applications.",
+    "credits": 3,
+    "term": "Spring",
+    "program": "Software Development"
+  },
+  {
+    "courseCode": "SD301",
+    "name": "Databases and Backend",
+    "description": "Relational databases, basic queries and simple backend integration.",
+    "credits": 3,
+    "term": "Winter",
+    "program": "Software Development"
+  }
+]

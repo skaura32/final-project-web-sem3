@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../App.css';
 
-function loadMessages() {
-  try {
-    const raw = localStorage.getItem('messages');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveMessages(msgs) {
-  localStorage.setItem('messages', JSON.stringify(msgs));
-}
-
 export default function Contact() {
   const user = JSON.parse(localStorage.getItem('currentUser'));
   const [subject, setSubject] = useState('');
@@ -22,10 +9,26 @@ export default function Contact() {
   const [myMessages, setMyMessages] = useState([]);
 
   useEffect(() => {
-    if (user) {
-      const msgs = loadMessages().filter(m => m.studentId === user.studentId);
-      setMyMessages(msgs);
-    }
+    (async () => {
+      if (!user) return;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/messages?mine=true', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = null; }
+        if (!res.ok || !json) {
+          setMyMessages([]);
+          if (!json) console.error('Contacts mine: non-JSON response', text);
+          return;
+        }
+        setMyMessages(json || []);
+      } catch (err) {
+        setMyMessages([]);
+      }
+    })();
   }, [user]);
 
   if (!user) {
@@ -48,23 +51,29 @@ export default function Contact() {
       setStatus('Please enter subject and message.');
       return;
     }
-    const msgs = loadMessages();
-    const newMsg = {
-      id: `msg_${Date.now()}`,
-      studentId: user.studentId,
-      name: `${user.firstName} ${user.lastName}`,
-      email: user.email,
-      subject: subject.trim(),
-      message: body.trim(),
-      date: new Date().toISOString(),
-      read: false
-    };
-    msgs.push(newMsg);
-    saveMessages(msgs);
-    setStatus('Message sent to admin.');
-    setSubject('');
-    setBody('');
-    setMyMessages(prev => [newMsg, ...prev]);
+    const token = localStorage.getItem('token');
+    (async () => {
+      try {
+        const res = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
+          body: JSON.stringify({ subject, message: body })
+        });
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = null; }
+        if (!res.ok) {
+          setStatus((json && json.message) || text || 'Failed to send message');
+          return;
+        }
+        setStatus('Message sent to admin.');
+        setSubject('');
+        setBody('');
+        setMyMessages(prev => [json, ...prev]);
+      } catch (err) {
+        setStatus('Failed to send message');
+      }
+    })();
   };
 
   return (

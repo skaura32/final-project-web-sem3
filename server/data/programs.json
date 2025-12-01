@@ -1,0 +1,17 @@
+[
+  {
+    "programId": "prog_sd",
+    "title": "Software Development - Diploma",
+    "term": "Fall"
+  },
+  {
+    "programId": "prog_sd_post",
+    "title": "Software Development - Post-Diploma",
+    "term": "Winter"
+  },
+  {
+    "programId": "prog_sd_cert",
+    "title": "Software Development - Certificate",
+    "term": "Spring"
+  }
+]

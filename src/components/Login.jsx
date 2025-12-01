@@ -20,15 +20,38 @@ export default function Login({ setUser }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const users = loadUsers();
-    const user = users.find(u => u.username === creds.username && u.password === creds.password);
-    if (!user) {
-      setError('Invalid username or password');
-      return;
-    }
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    if (setUser) setUser(user);
-    navigate('/dashboard');
+    setError('');
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: creds.username, password: creds.password }),
+        });
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = null; }
+        if (!res.ok) {
+          if (json && json.message) setError(json.message);
+          else if (text && text.trim().startsWith('<')) setError('Login failed: received HTML (is backend not running?)');
+          else setError(text || 'Login failed');
+          return;
+        }
+        if (!json) {
+          setError('Login failed: server returned non-JSON response. Check backend is running and proxy is configured');
+          console.error('Login: non-JSON response:', text);
+          return;
+        }
+        // Save token and user
+        localStorage.setItem('token', json.token);
+        localStorage.setItem('currentUser', JSON.stringify(json.user));
+        if (setUser) setUser(json.user);
+        navigate('/dashboard');
+      } catch (err) {
+        console.error('Login network error:', err);
+        setError('Login failed: ' + (err.message || 'unknown') + '.\nCheck the backend is running and reachable at http://localhost:5000');
+      }
+    })();
   };
 
   return (

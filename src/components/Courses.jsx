@@ -1,24 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { loadAllCourses } from '../data/coursesData';
+// Courses now come from backend API
 import '../App.css';
 
 const TERMS = ['Spring', 'Summer', 'Fall', 'Winter'];
 
-const regsKey = (studentId) => `registrations_${studentId}`;
-
-function loadRegistrations(studentId) {
-  try {
-    const raw = localStorage.getItem(regsKey(studentId));
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed;
-  } catch {
-    return {};
-  }
-}
-
-function saveRegistrations(studentId, data) {
-  localStorage.setItem(regsKey(studentId), JSON.stringify(data));
-}
+// registrations are loaded from backend now, so local storage helper not required
 
 export default function Courses() {
   const [user] = useState(() => JSON.parse(localStorage.getItem('currentUser')));
@@ -31,45 +17,75 @@ export default function Courses() {
   const [message, setMessage] = useState('');
   const [detailsCourse, setDetailsCourse] = useState(null);
 
+  // load courses from backend
   useEffect(() => {
-    const courses = loadAllCourses();
-    setAllCourses(courses);
+    (async () => {
+      try {
+        const res = await fetch('/api/courses');
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = null; }
+        if (!res.ok) {
+          console.error('Failed to load courses', res.status, text);
+          setAllCourses([]);
+          return;
+        }
+        if (!json) {
+          console.error('Courses: non-JSON response', text);
+          setAllCourses([]);
+          return;
+        }
+        setAllCourses(json || []);
+      } catch (err) {
+        setAllCourses([]);
+      }
+    })();
   }, []);
 
+  // load selected registrations for a term from backend
   useEffect(() => {
     if (!term) {
       setSelected([]);
       setMessage('');
       return;
     }
-
     if (!isLogged) {
       setSelected([]);
       setMessage('');
       return;
     }
-
-    const regs = loadRegistrations(user.studentId);
-    const termCourses = regs[term] || [];
-  
-    const selectedCourses = termCourses.map(courseCode => {
-      return allCourses.find(c => c.courseCode === courseCode) || { courseCode, name: courseCode };
-    });
-    
-    setSelected(selectedCourses);
-    setMessage('');
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/registrations/${term}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = null; }
+        if (!res.ok) {
+          setSelected([]);
+          setMessage('');
+          return;
+        }
+        const termCourses = json || [];
+        const selectedCourses = termCourses.map(courseCode => {
+          return allCourses.find(c => c.courseCode === courseCode) || { courseCode, name: courseCode };
+        });
+        setSelected(selectedCourses);
+        setMessage('');
+      } catch (err) {
+        setSelected([]);
+      }
+    })();
   }, [term, isLogged, user?.studentId, allCourses]);
 
+  // filter available courses based on search term and selected term
   useEffect(() => {
-    const q = query.trim().toLowerCase();
+    const q = (query || '').trim().toLowerCase();
     const filteredByQuery = q
-      ? allCourses.filter(
-          c =>
-            c.courseCode.toLowerCase().includes(q) ||
-            c.name.toLowerCase().includes(q)
-        )
+      ? allCourses.filter(c => (c.courseCode || '').toLowerCase().includes(q) || (c.name || '').toLowerCase().includes(q))
       : allCourses;
-
     const filtered = term ? filteredByQuery.filter(c => c.term === term) : filteredByQuery;
     setAvailable(filtered);
   }, [query, term, allCourses]);
@@ -119,11 +135,24 @@ export default function Courses() {
       setMessage('You must register for at least 2 courses.');
       return;
     }
-    
-    const regs = loadRegistrations(user.studentId);
-    regs[term] = selected.map(c => c.courseCode);
-    saveRegistrations(user.studentId, regs);
-    setMessage('Registration saved successfully.');
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/registrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
+          body: JSON.stringify({ term, courses: selected.map(c => c.courseCode) })
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setMessage(json.message || 'Failed to save registration');
+          return;
+        }
+        setMessage('Registration saved successfully.');
+      } catch (err) {
+        setMessage('Failed to save registration');
+      }
+    })();
   }, [term, isLogged, selected, user?.studentId]);
 
   const openDetails = (course) => setDetailsCourse(course);

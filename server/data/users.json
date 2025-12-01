@@ -1,0 +1,78 @@
+[
+  {
+    "id": 1,
+    "firstName": "Admin",
+    "lastName": "User",
+    "email": "admin@bowvalley.ca",
+    "username": "admin",
+    "password": "$2a$10$y0a3B6CxfP5gpwyJ9oQbner9KENvfxV9Y7PwjrrvOWBqAwHu7gA1a",
+    "studentId": "BVCADMIN",
+    "isAdmin": true
+  },
+  {
+    "id": 2,
+    "studentId": "BVCNKQIO6",
+    "username": "kritika",
+    "email": "kritika@bowvalley.ca",
+    "firstName": "kritika",
+    "lastName": "kritika",
+    "password": "$2a$10$zKnEQ1rzYu1d9/f.GCgSs.aqU1oA.oqiFe3URRte6C5yv3LuTiY6e",
+    "program": "",
+    "isAdmin": true
+  },
+  {
+    "id": 3,
+    "studentId": "BVCVE8XOV",
+    "username": "demouser",
+    "email": "demo@bow.ca",
+    "firstName": "Demo",
+    "lastName": "User",
+    "password": "$2a$10$RbzZtMfRu60RVvRoflWspe4TzFlQ3NvgNScxFjvWMPuRxqQSFYFZm",
+    "program": "SD",
+    "isAdmin": false
+  },
+  {
+    "id": 4,
+    "studentId": "BVC3QUPLF",
+    "username": "autotest01",
+    "email": "auto@bow.ca",
+    "firstName": "Auto",
+    "lastName": "Tester",
+    "password": "$2a$10$QKvTp39ywMVz0hGzAjmV4Oud2a0YQIo1HMd9TIQQFe0E9bkv9zxi6",
+    "program": "SD",
+    "isAdmin": false
+  },
+  {
+    "id": 5,
+    "studentId": "BVCOTG148",
+    "username": "testuser",
+    "email": "test@bow.ca",
+    "firstName": "Test",
+    "lastName": "User",
+    "password": "$2a$10$hSqqxZRrHV5TCcp6pW5D/eDM32BYWhJXA.yFsUWLU67esdfua/CEi",
+    "program": "SD",
+    "isAdmin": false
+  },
+  {
+    "id": 6,
+    "studentId": "BVC1QBHZA",
+    "username": "tuser",
+    "email": "t@test.com",
+    "firstName": "Test",
+    "lastName": "User",
+    "password": "$2a$10$otsWojbuIBs3NSRkseO2Dujj9o9mYfm5wH3gzrLEm./w1nxt2m6ve",
+    "program": "",
+    "isAdmin": false
+  },
+  {
+    "id": 7,
+    "studentId": "BVC9YNH8X",
+    "username": "sqltester",
+    "email": "sqltester@example.com",
+    "firstName": "SQL",
+    "lastName": "Tester",
+    "password": "$2a$10$eZZ7JUJvgYhCvSdYqHzqSegiwAsePB4uZOaBmqoQFcNMVZWIvn0nO",
+    "program": "",
+    "isAdmin": false
+  }
+]

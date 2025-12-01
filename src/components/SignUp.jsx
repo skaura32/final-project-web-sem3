@@ -71,37 +71,48 @@ export default function SignUp({ setUser }) {
       return;
     }
 
-    const users = loadUsers();
-
-    if (users.find(u => u.username === form.username)) {
-      setError('Username already exists.');
-      return;
-    }
-    if (users.find(u => u.email === form.email)) {
-      setError('An account with this email already exists.');
-      return;
-    }
-
-    const existingIds = new Set(users.map(u => u.studentId));
-    const studentId = generateStudentId(existingIds);
-
-    const newUser = {
-      ...form,
-      studentId,
-      isAdmin: form.role === 'admin'
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    if (typeof setUser === 'function') setUser(newUser);
-
-    if (newUser.isAdmin) {
-      navigate('/admin');
-    } else {
-      navigate('/dashboard');
-    }
+    // Call backend /api/auth/register
+    (async () => {
+      try {
+        const payload = {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          username: form.username,
+          password: form.password,
+          role: form.role,
+          program: form.program
+        };
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        // parse response safely (HTML fallback -> helpful error)
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { json = null; }
+        if (!res.ok) {
+          if (json && json.message) setError(json.message);
+          else if (text && text.trim().startsWith('<')) setError('Registration failed: received HTML (is backend not running?)');
+          else setError(text || 'Registration failed');
+          return;
+        }
+        if (!json) {
+          setError('Registration failed: server returned non-JSON response. Check backend is running and proxy is configured');
+          console.error('Registration: non-JSON response:', text);
+          return;
+        }
+        const { token, user: serverUser } = json;
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUser', JSON.stringify(serverUser));
+        if (typeof setUser === 'function') setUser(serverUser);
+        if (serverUser.isAdmin) navigate('/admin'); else navigate('/dashboard');
+      } catch (err) {
+        console.error('Register network error:', err);
+        setError('Registration failed: ' + (err.message || 'unknown') + '.\nMake sure the backend is running (http://localhost:5000) and CORS is enabled.');
+      }
+    })();
   };
 
   return (
