@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "migrate": "node -r dotenv/config db-migrate-seed.js"
+    "migrate": "node -r dotenv/config db-migrate-seed.js",
+    "verify": "node -r dotenv/config verify.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -16,5 +17,8 @@
     "jsonwebtoken": "^9.0.0",
     "msnodesqlv8": "^5.1.1",
     "mssql": "^12.1.1"
+  },
+  "devDependencies": {
+    "node-fetch": "^2.7.0"
   }
 }
