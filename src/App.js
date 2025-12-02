@@ -23,11 +23,39 @@ function App() {
     if (saved) setUser(JSON.parse(saved));
   }, []);
 
+  // wrapper to set user and persist lastActive timestamp
+  const handleSetUser = (u) => {
+    if(!u) return setUser(null);
+    const withLast = { ...u, lastActive: Date.now() };
+    setUser(withLast);
+    try{ localStorage.setItem('currentUser', JSON.stringify(withLast)); }catch(e){}
+  };
+
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
   };
+
+  // expire session after 7 days of inactivity
+  useEffect(()=>{
+    const checkExpiry = () => {
+      try{
+        const raw = localStorage.getItem('currentUser');
+        if(!raw) return;
+        const cu = JSON.parse(raw);
+        if(cu && cu.lastActive){
+          const sevenDays = 7 * 24 * 60 * 60 * 1000;
+          if(Date.now() - cu.lastActive >= sevenDays){
+            handleLogout();
+          }
+        }
+      }catch(e){}
+    };
+    checkExpiry();
+    const iv = setInterval(checkExpiry, 60 * 60 * 1000); // hourly
+    return ()=> clearInterval(iv);
+  }, []);
 
   return (
     <div className="App">
@@ -48,9 +76,9 @@ function App() {
                 {!user && <p>Please login or sign up to register for courses.</p>}
               </div>
             } />
-            <Route path="/signup" element={<SignUp setUser={setUser} />} />
+            <Route path="/signup" element={<SignUp setUser={handleSetUser} />} />
            <Route path="/" element={<Home />} />
-           <Route path="/login" element={<Login setUser={setUser} />} />
+           <Route path="/login" element={<Login setUser={handleSetUser} />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/courses" element={<Courses />} />
