@@ -1,0 +1,329 @@
+{
+  "info": {
+    "name": "Bow Course Registration API - Backend Testing",
+    "_postman_id": "bow-api-2025",
+    "description": "Complete API testing for Assignment 2 - Matches actual backend routes in server.js",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Server Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Test if server is running and database is connected"
+      }
+    },
+    {
+      "name": "02 - Get API Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api",
+          "host": ["{{base_url}}"],
+          "path": ["api"]
+        },
+        "description": "Get API version and available endpoints"
+      }
+    },
+    {
+      "name": "03 - Admin Login (Valid)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/admin/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "login"]
+        },
+        "description": "Test admin authentication - Security test"
+      }
+    },
+    {
+      "name": "04 - Admin Login (Invalid)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrongpassword\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/admin/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "login"]
+        },
+        "description": "Test security validation - Should fail"
+      }
+    },
+    {
+      "name": "05 - Get All Courses",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/courses",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses"]
+        },
+        "description": "Retrieve all courses from database"
+      }
+    },
+    {
+      "name": "06 - Search Courses by Name",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/courses?search=Web",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses"],
+          "query": [
+            {
+              "key": "search",
+              "value": "Web"
+            }
+          ]
+        },
+        "description": "Search courses by name or code"
+      }
+    },
+    {
+      "name": "07 - Filter Courses by Term",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/courses?term=Winter",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses"],
+          "query": [
+            {
+              "key": "term",
+              "value": "Winter"
+            }
+          ]
+        },
+        "description": "Filter courses by term (Winter, Summer, Fall, Spring)"
+      }
+    },
+    {
+      "name": "08 - Filter Courses by Program",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/courses?program=Diploma",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses"],
+          "query": [
+            {
+              "key": "program",
+              "value": "Diploma"
+            }
+          ]
+        },
+        "description": "Filter by program (Diploma, Post-Diploma, Certificate)"
+      }
+    },
+    {
+      "name": "09 - Create New Course",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"course_code\": \"SODV5201\",\n  \"name\": \"Artificial Intelligence\",\n  \"term\": \"Summer\",\n  \"program\": \"Post-Diploma\",\n  \"start_date\": \"2025-05-01\",\n  \"end_date\": \"2025-08-15\",\n  \"domestic_fee\": 1800.00,\n  \"international_fee\": 5400.00,\n  \"description\": \"Machine Learning and AI fundamentals with Python and TensorFlow\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/courses",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses"]
+        },
+        "description": "Admin creates new course - POST test"
+      }
+    },
+    {
+      "name": "10 - Update Course",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"course_code\": \"SODV1201\",\n  \"name\": \"Introduction to Programming - UPDATED\",\n  \"term\": \"Fall\",\n  \"program\": \"Diploma\",\n  \"start_date\": \"2024-09-05\",\n  \"end_date\": \"2024-12-20\",\n  \"domestic_fee\": 1400.00,\n  \"international_fee\": 4000.00,\n  \"description\": \"Updated: Learn C#, .NET, Python with hands-on projects\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/courses/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses", "1"]
+        },
+        "description": "Admin updates existing course - PUT test"
+      }
+    },
+    {
+      "name": "11 - Delete Course",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/courses/6",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses", "6"]
+        },
+        "description": "Admin deletes course - DELETE test (deletes AI course from test 9)"
+      }
+    },
+    {
+      "name": "12 - Get All Students",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/admin/students",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "students"]
+        },
+        "description": "Admin views all registered students"
+      }
+    },
+    {
+      "name": "13 - Get All Messages",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/messages",
+          "host": ["{{base_url}}"],
+          "path": ["api", "messages"]
+        },
+        "description": "Admin views all submitted messages/contact forms"
+      }
+    },
+    {
+      "name": "14 - Get Single Message",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/messages/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "messages", "1"]
+        },
+        "description": "Get details of specific message by ID"
+      }
+    },
+    {
+      "name": "15 - Submit Message (Student)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"student_id\": \"STU001\",\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@bow.ca\",\n  \"subject\": \"Postman API Testing - Contact Form Submission\",\n  \"message\": \"This is a test message submitted via Postman to verify the contact form API endpoint works correctly. Testing on December 5, 2025.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/messages",
+          "host": ["{{base_url}}"],
+          "path": ["api", "messages"]
+        },
+        "description": "Student submits contact form - POST test"
+      }
+    },
+    {
+      "name": "16 - Submit Message (Missing Fields)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Student\",\n  \"email\": \"test@bow.ca\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/messages",
+          "host": ["{{base_url}}"],
+          "path": ["api", "messages"]
+        },
+        "description": "Validation test - Missing required fields (should return error)"
+      }
+    },
+    {
+      "name": "17 - Get Students in Course",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/courses/1/students",
+          "host": ["{{base_url}}"],
+          "path": ["api", "courses", "1", "students"]
+        },
+        "description": "Admin views students registered in specific course"
+      }
+    },
+    {
+      "name": "18 - Get Student Enrollments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/enrollments?student_id=STU001",
+          "host": ["{{base_url}}"],
+          "path": ["api", "enrollments"],
+          "query": [
+            {
+              "key": "student_id",
+              "value": "STU001"
+            }
+          ]
+        },
+        "description": "Get all enrollments for a specific student"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}

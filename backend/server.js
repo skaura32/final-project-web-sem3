@@ -41,17 +41,11 @@ sql.connect(config)
     });
 
 // Routes
-const userRoutes = require('./routes/users');
-const courseRoutes = require('./routes/courses');
-const enrollmentRoutes = require('./routes/enrollments');
-const messageRoutes = require('./routes/messages');
-const adminRoutes = require('./routes/admin');
-
-app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/enrollments', enrollmentRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/users', require('./routes/users'));
+app.use('/api/courses', require('./routes/courses'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/enrollments', require('./routes/enrollments'));
 
 // Root API endpoint
 app.get('/api', (req, res) => {
