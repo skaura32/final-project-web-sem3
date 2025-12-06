@@ -74,5 +74,16 @@
     "password": "$2a$10$eZZ7JUJvgYhCvSdYqHzqSegiwAsePB4uZOaBmqoQFcNMVZWIvn0nO",
     "program": "",
     "isAdmin": false
+  },
+  {
+    "id": 8,
+    "studentId": "BVC8KMYJ0",
+    "username": "sample1",
+    "email": "sample1@gmail.com",
+    "firstName": "sample1",
+    "lastName": "s1",
+    "password": "$2a$10$b/NYZIoxN2njHdGAIU9EnuM4ryYt4Vg/CM4A/H.EQ8fl0HDlDhlMW",
+    "program": "diploma",
+    "isAdmin": false
   }
 ]
