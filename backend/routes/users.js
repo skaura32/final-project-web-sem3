@@ -1,11 +1,102 @@
 const express = require('express');
 const router = express.Router();
-const { sql, poolPromise } = require('../config/database');
 const bcrypt = require('bcrypt');
+const sql = require('mssql');
+const config = require('../config/database');
 
-// POST - Register new student
+// GET /api/users - Get all users (Admin only)
+router.get('/', async (req, res) => {
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .query('SELECT user_id, student_id, username, email, first_name, last_name, phone, birthday, department, program, is_admin, created_at FROM Users ORDER BY created_at DESC');
+        
+        res.json({
+            success: true,
+            users: result.recordset,
+            count: result.recordset.length
+        });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error fetching users',
+            details: error.message
+        });
+    }
+});
+
+// GET /api/users/:id - Get single user by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('user_id', sql.Int, id)
+            .query('SELECT user_id, student_id, username, email, first_name, last_name, phone, birthday, department, program, is_admin, created_at FROM Users WHERE user_id = @user_id');
+        
+        if (result.recordset.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        res.json({
+            success: true,
+            user: result.recordset[0]
+        });
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error fetching user',
+            details: error.message
+        });
+    }
+});
+
+// GET /api/users/profile/:studentId - Get user profile by student_id
+router.get('/profile/:studentId', async (req, res) => {
+    try {
+        const pool = await sql.connect(config);
+        const result = await pool.request()
+            .input('studentId', sql.NVarChar, req.params.studentId)
+            .query(`
+                SELECT 
+                    user_id, student_id, username, email, first_name, last_name, 
+                    phone, birthday, department, program, is_admin, created_at 
+                FROM Users 
+                WHERE student_id = @studentId
+            `);
+        
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'User not found' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            user: result.recordset[0] 
+        });
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Database error', 
+            details: error.message 
+        });
+    }
+});
+
+// POST /api/users/register - Register new student
 router.post('/register', async (req, res) => {
     try {
+        console.log('📝 Registration request received:', req.body);
+        
         const { 
             first_name, 
             last_name, 
@@ -27,55 +118,84 @@ router.post('/register', async (req, res) => {
             });
         }
         
+        const pool = await sql.connect(config);
+        
+        // Check if username exists
+        const checkUser = await pool.request()
+            .input('username', sql.NVarChar, username)
+            .query('SELECT * FROM Users WHERE username = @username');
+
+        if (checkUser.recordset.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Username already exists'
+            });
+        }
+
+        // Check if email exists
+        const checkEmail = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .query('SELECT * FROM Users WHERE email = @email');
+
+        if (checkEmail.recordset.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email already registered'
+            });
+        }
+        
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
         
         // Generate student ID
-        const student_id = 'STU' + Date.now();
+        const studentIdResult = await pool.request()
+            .query('SELECT COUNT(*) as count FROM Users WHERE is_admin = 0');
+        const studentCount = studentIdResult.recordset[0].count;
+        const student_id = `STU${String(studentCount + 1).padStart(3, '0')}`;
         
-        const pool = await poolPromise;
+        // Insert user
         const result = await pool.request()
-            .input('student_id', sql.VarChar(20), student_id)
-            .input('username', sql.VarChar(50), username)
-            .input('password', sql.VarChar(255), hashedPassword)
-            .input('email', sql.VarChar(100), email)
-            .input('first_name', sql.VarChar(50), first_name)
-            .input('last_name', sql.VarChar(50), last_name)
-            .input('phone', sql.VarChar(20), phone || null)
+            .input('student_id', sql.NVarChar, student_id)
+            .input('username', sql.NVarChar, username)
+            .input('password', sql.NVarChar, hashedPassword)
+            .input('email', sql.NVarChar, email)
+            .input('first_name', sql.NVarChar, first_name)
+            .input('last_name', sql.NVarChar, last_name)
+            .input('phone', sql.NVarChar, phone || null)
             .input('birthday', sql.Date, birthday || null)
-            .input('department', sql.VarChar(10), department || 'SD')
-            .input('program', sql.VarChar(50), program || null)
+            .input('department', sql.NVarChar, department || 'SD')
+            .input('program', sql.NVarChar, program || null)
+            .input('is_admin', sql.Bit, 0)
             .query(`
                 INSERT INTO Users 
-                (student_id, username, password, email, first_name, last_name, phone, birthday, department, program) 
-                VALUES (@student_id, @username, @password, @email, @first_name, @last_name, @phone, @birthday, @department, @program);
-                SELECT SCOPE_IDENTITY() AS userId;
+                (student_id, username, password, email, first_name, last_name, phone, birthday, department, program, is_admin)
+                OUTPUT INSERTED.user_id
+                VALUES (@student_id, @username, @password, @email, @first_name, @last_name, @phone, @birthday, @department, @program, @is_admin)
             `);
+        
+        console.log('✅ User registered successfully:', student_id);
         
         res.status(201).json({ 
             success: true, 
             message: 'Student registered successfully', 
             student_id: student_id,
-            userId: result.recordset[0].userId
+            userId: result.recordset[0].user_id
         });
-    } catch (err) {
-        if (err.number === 2627) { // Duplicate key
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Username or email already exists' 
-            });
-        }
+    } catch (error) {
+        console.error('❌ Registration error:', error);
         res.status(500).json({ 
             success: false, 
-            error: 'Database error', 
-            details: err.message 
+            error: 'Registration failed', 
+            details: error.message 
         });
     }
 });
 
-// POST - Student login
+// POST /api/users/login - Student login
 router.post('/login', async (req, res) => {
     try {
+        console.log('🔐 Login request received for:', req.body.username);
+        
         const { username, password } = req.body;
         
         if (!username || !password) {
@@ -85,9 +205,9 @@ router.post('/login', async (req, res) => {
             });
         }
         
-        const pool = await poolPromise;
+        const pool = await sql.connect(config);
         const result = await pool.request()
-            .input('username', sql.VarChar(50), username)
+            .input('username', sql.NVarChar, username)
             .query('SELECT * FROM Users WHERE username = @username');
         
         if (result.recordset.length === 0) {
@@ -109,6 +229,8 @@ router.post('/login', async (req, res) => {
             });
         }
         
+        console.log('✅ Login successful for:', username);
+        
         // Remove password from response
         delete user.password;
         
@@ -117,45 +239,119 @@ router.post('/login', async (req, res) => {
             message: 'Login successful', 
             user: user
         });
-    } catch (err) {
+    } catch (error) {
+        console.error('❌ Login error:', error);
         res.status(500).json({ 
             success: false, 
             error: 'Server error', 
-            details: err.message 
+            details: error.message 
         });
     }
 });
 
-// GET - Get user profile by student_id
-router.get('/profile/:studentId', async (req, res) => {
+// PUT /api/users/:id - Update user
+router.put('/:id', async (req, res) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request()
-            .input('studentId', sql.VarChar(20), req.params.studentId)
+        const { id } = req.params;
+        const { first_name, last_name, email, phone, birthday, department, program } = req.body;
+        
+        const pool = await sql.connect(config);
+        await pool.request()
+            .input('user_id', sql.Int, id)
+            .input('first_name', sql.NVarChar, first_name)
+            .input('last_name', sql.NVarChar, last_name)
+            .input('email', sql.NVarChar, email)
+            .input('phone', sql.NVarChar, phone)
+            .input('birthday', sql.Date, birthday)
+            .input('department', sql.NVarChar, department)
+            .input('program', sql.NVarChar, program)
             .query(`
-                SELECT 
-                    user_id, student_id, username, email, first_name, last_name, 
-                    phone, birthday, department, program, is_admin, created_at 
-                FROM Users 
-                WHERE student_id = @studentId
+                UPDATE Users 
+                SET first_name = @first_name,
+                    last_name = @last_name,
+                    email = @email,
+                    phone = @phone,
+                    birthday = @birthday,
+                    department = @department,
+                    program = @program
+                WHERE user_id = @user_id
             `);
         
-        if (result.recordset.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'User not found' 
+        res.json({
+            success: true,
+            message: 'User updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error updating user',
+            details: error.message
+        });
+    }
+});
+
+// DELETE /api/users/:id - Delete user
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const pool = await sql.connect(config);
+        await pool.request()
+            .input('user_id', sql.Int, id)
+            .query('DELETE FROM Users WHERE user_id = @user_id');
+        
+        res.json({
+            success: true,
+            message: 'User deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error deleting user',
+            details: error.message
+        });
+    }
+});
+
+// GET /api/users/me - Get current user info
+router.get('/me', async (req, res) => {
+    try {
+        // For now, get user from localStorage on frontend
+        // Later add JWT authentication here
+        const userId = req.query.user_id || req.headers['x-user-id'];
+        
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
             });
         }
+
+        const pool = await sql.connect(config);
         
-        res.json({ 
-            success: true, 
-            user: result.recordset[0] 
+        const result = await pool.request()
+            .input('user_id', sql.Int, userId)
+            .query('SELECT user_id, student_id, first_name, last_name, email, phone, birthday, department, program, is_admin FROM Users WHERE user_id = @user_id');
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: result.recordset[0]
         });
-    } catch (err) {
-        res.status(500).json({ 
-            success: false, 
-            error: 'Database error', 
-            details: err.message 
+
+    } catch (error) {
+        console.error('❌ Error fetching user:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user data'
         });
     }
 });

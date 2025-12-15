@@ -1,98 +1,100 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const sql = require('mssql');
-require('dotenv').config();
+const config = require('./config/database');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Database configuration - DIRECTLY DEFINED
-const config = {
-    user: 'kritika',
-    password: 'j007@j007',
-    server: 'LAPTOP-P8TVVSSQ\\SQLEXPRESS',
-    database: 'bow_course_registration',
-    options: {
-        encrypt: false,
-        trustServerCertificate: true,
-        enableArithAbort: true
-    },
-    port: 1433
-};
-
-console.log('🔧 Database Configuration (Direct):');
-console.log('   User:', config.user);
-console.log('   Server:', config.server);
-console.log('   Database:', config.database);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Test database connection
 sql.connect(config)
-    .then(() => {
-        console.log('✓ Connected to SQL Server database');
+    .then(pool => {
+        console.log('✅ Connected to SQL Server');
+        return pool;
     })
-    .catch(err => {
-        console.error('❌ Database connection failed:', err.message);
-    });
+    .catch(err => console.error('❌ Database connection failed:', err));
 
-// Routes
-app.use('/api/users', require('./routes/users'));
-app.use('/api/courses', require('./routes/courses'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/messages', require('./routes/messages'));
-app.use('/api/enrollments', require('./routes/enrollments'));
+// ==================== ROUTES ====================
+console.log('🔧 Loading routes...');
 
-// Root API endpoint
+const userRoutes = require('./routes/users');
+console.log('   ✓ users.js loaded');
+
+const courseRoutes = require('./routes/courses');
+console.log('   ✓ courses.js loaded');
+
+const adminRoutes = require('./routes/admin');
+console.log('   ✓ admin.js loaded');
+
+const messageRoutes = require('./routes/messages');
+console.log('   ✓ messages.js loaded');
+
+const enrollmentRoutes = require('./routes/enrollments');
+console.log('   ✓ enrollments.js loaded');
+
+const authRoutes = require('./routes/auth');
+console.log('   ✓ auth.js loaded');
+
+// Register routes
+app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/auth', authRoutes);
+
+console.log('✓ All routes registered!\n');
+// ================================================
+
+// Root endpoint
 app.get('/api', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'Bow Course Registration API',
         version: '1.0.0',
-        status: 'Running',
         endpoints: {
-            health: '/api/health',
-            courses: '/api/courses',
             users: '/api/users',
+            courses: '/api/courses',
             admin: '/api/admin',
             messages: '/api/messages',
-            enrollments: '/api/enrollments'
+            enrollments: '/api/enrollments',
+            auth: '/api/auth',
+            health: '/api/health'
         }
     });
 });
 
-// Health check endpoint
+// Health check
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'Server is running',
-        timestamp: new Date(),
-        database: 'SQL Server - Connected'
-    });
+    res.json({ status: 'OK', message: 'Backend server is running' });
 });
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({ 
+    res.status(404).json({
         success: false,
         error: 'Endpoint not found',
-        path: req.path 
+        path: req.path
     });
 });
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
-    console.error('Server error:', err);
+    console.error('Server Error:', err);
     res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
+        message: err.message
     });
 });
 
-// Start server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`✓ Server running on port ${PORT}`);
-    console.log(`✓ API available at http://localhost:${PORT}/api`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
+module.exports = app;

@@ -1,33 +1,13 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
-function loadUsers() {
-  try {
-    const raw = localStorage.getItem('users');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users) {
-  localStorage.setItem('users', JSON.stringify(users));
-}
-
-function generateStudentId(existingIds) {
-  let id;
-  do {
-    id = 'BVC' + Math.random().toString(36).slice(2, 8).toUpperCase();
-  } while (existingIds.has(id));
-  return id;
-}
-
 export default function SignUp({ setUser }) {
   const navigate = useNavigate();
+  
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
+    first_name: '',      // ✅ Changed from firstName
+    last_name: '',       // ✅ Changed from lastName
     email: '',
     phone: '',
     birthday: '',
@@ -37,11 +17,15 @@ export default function SignUp({ setUser }) {
     password: '',
     role: 'student',
   });
+  
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+    if (error) setError(''); // Clear error when user types
   };
 
   const handleRoleChange = (e) => {
@@ -52,133 +36,294 @@ export default function SignUp({ setUser }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
-    if (!form.firstName || !form.lastName || !form.email || !form.username || !form.password) {
-      setError('Please fill required fields.');
+    console.log('=== SIGNUP FORM SUBMIT ===');
+    console.log('Form data:', form);
+
+    // Validation
+    if (!form.first_name || !form.last_name || !form.email || !form.username || !form.password) {
+      setError('Please fill all required fields (First Name, Last Name, Email, Username, Password)');
       return;
     }
 
+    // Admin email validation
     if (form.role === 'admin' && !form.email.endsWith('@bowvalley.ca')) {
       setError('Admin email must end with @bowvalley.ca');
       return;
     }
 
+    // Student program validation (ONLY for students)
     if (form.role === 'student' && !form.program) {
       setError('Please select a program.');
       return;
     }
 
-    // Call backend /api/auth/register
-    (async () => {
-      try {
-        const payload = {
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          username: form.username,
-          password: form.password,
-          role: form.role,
-          program: form.program
-        };
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        // parse response safely (HTML fallback -> helpful error)
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); } catch (e) { json = null; }
-        if (!res.ok) {
-          if (json && json.message) setError(json.message);
-          else if (text && text.trim().startsWith('<')) setError('Registration failed: received HTML (is backend not running?)');
-          else setError(text || 'Registration failed');
-          return;
-        }
-        if (!json) {
-          setError('Registration failed: server returned non-JSON response. Check backend is running and proxy is configured');
-          console.error('Registration: non-JSON response:', text);
-          return;
-        }
-        const { token, user: serverUser } = json;
-        localStorage.setItem('token', token);
-        localStorage.setItem('currentUser', JSON.stringify(serverUser));
-        if (typeof setUser === 'function') setUser(serverUser);
-        if (serverUser.isAdmin) navigate('/admin'); else navigate('/dashboard');
-      } catch (err) {
-        console.error('Register network error:', err);
-        setError('Registration failed: ' + (err.message || 'unknown') + '.\nMake sure the backend is running (http://localhost:5000) and CORS is enabled.');
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Password length validation
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // ✅ Build payload - ONLY include program if student
+      const payload = {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        phone: form.phone || '',
+        birthday: form.birthday || '',
+        department: form.department,
+        username: form.username,
+        password: form.password,
+      };
+
+      // ✅ Only add program if user is student
+      if (form.role === 'student') {
+        payload.program = form.program;
+      } else {
+        // For admin, set a default program or don't include it
+        payload.program = 'N/A';  // Backend might still require it
       }
-    })();
+
+      console.log('📤 Sending to backend:', payload);
+      console.log('🌐 URL: http://localhost:5000/api/auth/register');
+
+      const res = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('📥 Response status:', res.status);
+
+      const data = await res.json();
+      console.log('📥 Response data:', data);
+
+      if (!res.ok) {
+        setError(data.message || 'Registration failed');
+        return;
+      }
+
+      if (data.success) {
+        console.log('✅ Registration successful!');
+        setSuccess(`✅ Registration successful! Student ID: ${data.student_id}. Redirecting to login...`);
+        
+        // Store user info if token is provided
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
+        if (data.user) {
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
+          if (typeof setUser === 'function') setUser(data.user);
+        }
+
+        // Clear form
+        setForm({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          birthday: '',
+          department: 'SD',
+          program: '',
+          username: '',
+          password: '',
+          role: 'student',
+        });
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          if (form.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/login');
+          }
+        }, 2000);
+      } else {
+        setError(data.message || 'Registration failed');
+      }
+    } catch (err) {
+      console.error('❌ Registration error:', err);
+      setError('Network error. Make sure backend is running on http://localhost:5000');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="signup-container">
-      <h2>Registration</h2>
-      {error && <div className="message error">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>
-            <input
-              type="radio"
-              name="role"
-              value="student"
-              checked={form.role === 'student'}
-              onChange={handleRoleChange}
-            /> Student
-          </label>
-          <label style={{ marginLeft: 16 }}>
-            <input
-              type="radio"
-              name="role"
-              value="admin"
-              checked={form.role === 'admin'}
-              onChange={handleRoleChange}
-            /> Admin
-          </label>
-        </div>
-        <div className="form-group">
-          <input name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} required />
-        </div>
-        <div className="form-group">
-          <input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} required />
-        </div>
-        <div className="form-group">
-          <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
-        </div>
-        <div className="form-group">
-          <input name="phone" placeholder="Phone" value={form.phone} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <input name="birthday" type="date" value={form.birthday} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <select name="department" value={form.department} onChange={handleChange} required>
-            <option value="SD">Software Development</option>
-          </select>
-        </div>
-        {}
-        {form.role === 'student' && (
+      <div className="signup-card">
+        <h2>Registration</h2>
+        
+        {/* Error Message */}
+        {error && <div className="message error">⚠️ {error}</div>}
+        
+        {/* Success Message */}
+        {success && <div className="message success">{success}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          {/* User Role Selection */}
           <div className="form-group">
-            <select name="program" value={form.program} onChange={handleChange} required>
-              <option value="">Select Program</option>
-              <option value="diploma">Diploma (2 years)</option>
-              <option value="postDiploma">Post-Diploma (1 year)</option>
-              <option value="certificate">Certificate (6 months)</option>
+            <label>
+              <input
+                type="radio"
+                name="role"
+                value="student"
+                checked={form.role === 'student'}
+                onChange={handleRoleChange}
+              /> Student
+            </label>
+            <label style={{ marginLeft: 16 }}>
+              <input
+                type="radio"
+                name="role"
+                value="admin"
+                checked={form.role === 'admin'}
+                onChange={handleRoleChange}
+              /> Admin
+            </label>
+          </div>
+
+          {/* First Name */}
+          <div className="form-group">
+            <input 
+              name="first_name" 
+              placeholder="First Name *" 
+              value={form.first_name} 
+              onChange={handleChange} 
+              disabled={loading}
+              required 
+            />
+          </div>
+
+          {/* Last Name */}
+          <div className="form-group">
+            <input 
+              name="last_name" 
+              placeholder="Last Name *" 
+              value={form.last_name} 
+              onChange={handleChange} 
+              disabled={loading}
+              required 
+            />
+          </div>
+
+          {/* Email */}
+          <div className="form-group">
+            <input 
+              name="email" 
+              type="email" 
+              placeholder="Email *" 
+              value={form.email} 
+              onChange={handleChange} 
+              disabled={loading}
+              required 
+            />
+          </div>
+
+          {/* Phone */}
+          <div className="form-group">
+            <input 
+              name="phone" 
+              placeholder="Phone (Optional)" 
+              value={form.phone} 
+              onChange={handleChange} 
+              disabled={loading}
+            />
+          </div>
+
+          {/* Birthday */}
+          <div className="form-group">
+            <input 
+              name="birthday" 
+              type="date" 
+              value={form.birthday} 
+              onChange={handleChange} 
+              disabled={loading}
+            />
+          </div>
+
+          {/* Department */}
+          <div className="form-group">
+            <select 
+              name="department" 
+              value={form.department} 
+              onChange={handleChange} 
+              disabled={loading}
+              required
+            >
+              <option value="SD">Software Development</option>
+              <option value="IT">Information Technology</option>
+              <option value="BM">Business Management</option>
             </select>
           </div>
-        )}
-        <div className="form-group">
-          <input name="username" placeholder="Username" value={form.username} onChange={handleChange} required />
-        </div>
-        <div className="form-group">
-          <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-        </div>
-        <button type="submit">Register</button>
-      </form>
+
+          {/* Program (only for students) */}
+          {form.role === 'student' && (
+            <div className="form-group">
+              <select 
+                name="program" 
+                value={form.program} 
+                onChange={handleChange} 
+                disabled={loading}
+                required
+              >
+                <option value="">Select Program *</option>
+                <option value="Diploma">Diploma (2 years)</option>
+                <option value="Post-Diploma">Post-Diploma (1 year)</option>
+                <option value="Certificate">Certificate (6 months)</option>
+              </select>
+            </div>
+          )}
+
+          {/* Username */}
+          <div className="form-group">
+            <input 
+              name="username" 
+              placeholder="Username *" 
+              value={form.username} 
+              onChange={handleChange} 
+              disabled={loading}
+              required 
+            />
+          </div>
+
+          {/* Password */}
+          <div className="form-group">
+            <input 
+              name="password" 
+              type="password" 
+              placeholder="Password * (min 6 characters)" 
+              value={form.password} 
+              onChange={handleChange} 
+              disabled={loading}
+              required 
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Registering...' : 'Register'}
+          </button>
+        </form>
+        
+        <p className="login-link">
+          Already have an account? <a href="/login">Login here</a>
+        </p>
+      </div>
     </div>
   );
 }
